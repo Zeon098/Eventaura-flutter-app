@@ -9,7 +9,7 @@ class AppConstants {
   static const chatsCollection = 'chats';
   static const messagesCollection = 'chat_messages';
 
-  // Environment keys
+  // Environment keys (names used in .env)
   static const algoliaAppIdKey = 'ALGOLIA_APP_ID';
   static const algoliaApiKeyKey = 'ALGOLIA_SEARCH_API_KEY';
   static const cloudinaryCloudNameKey = 'CLOUDINARY_CLOUD_NAME';

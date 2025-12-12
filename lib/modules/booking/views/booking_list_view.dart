@@ -4,17 +4,11 @@ import '../../home/controllers/shell_controller.dart';
 import '../controllers/booking_controller.dart';
 import 'booking_detail_view.dart';
 
-class BookingListView extends StatelessWidget {
+class BookingListView extends GetView<BookingController> {
   const BookingListView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put<BookingController>(
-      BookingController(
-        bookingRepository: Get.find(),
-        chatRepository: Get.find(),
-      ),
-    );
     final shell = Get.find<ShellController>();
     return Scaffold(
       appBar: AppBar(title: const Text('Bookings')),

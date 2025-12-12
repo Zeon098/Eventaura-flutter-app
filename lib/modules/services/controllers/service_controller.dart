@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/utils/snackbar_utils.dart';
@@ -32,6 +33,7 @@ class ServiceController extends GetxController {
       services.assignAll,
       onError: (e) {
         SnackbarUtils.error('Services', e.toString());
+        debugPrint('Error streaming services: $e');
       },
     );
   }

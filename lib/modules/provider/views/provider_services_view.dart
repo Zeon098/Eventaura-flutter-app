@@ -4,27 +4,13 @@ import '../../home/controllers/shell_controller.dart';
 import '../../services/controllers/service_controller.dart';
 import '../../services/views/service_form_view.dart';
 
-class ProviderServicesView extends StatefulWidget {
+class ProviderServicesView extends GetView<ServiceController> {
   const ProviderServicesView({super.key});
 
   @override
-  State<ProviderServicesView> createState() => _ProviderServicesViewState();
-}
-
-class _ProviderServicesViewState extends State<ProviderServicesView> {
-  @override
-  void initState() {
-    super.initState();
-    final shell = Get.find<ShellController>();
-    final serviceController = Get.put<ServiceController>(
-      ServiceController(serviceRepository: Get.find()),
-    );
-    serviceController.bindProviderServices(shell.user.value?.id ?? '');
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final controller = Get.find<ServiceController>();
+    final shell = Get.find<ShellController>();
+    controller.bindProviderServices(shell.user.value?.id ?? '');
     return Scaffold(
       appBar: AppBar(title: const Text('My services')),
       floatingActionButton: FloatingActionButton.extended(

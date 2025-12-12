@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import '../../../data/repositories/auth_repository.dart';
@@ -18,6 +19,7 @@ class AuthController extends GetxController {
       SnackbarUtils.success('Welcome back', 'Signed in successfully');
       Get.offAllNamed('/shell');
     } catch (e) {
+      debugPrint('Login error: $e');
       SnackbarUtils.error('Login failed', e.toString());
     } finally {
       isLoading.value = false;

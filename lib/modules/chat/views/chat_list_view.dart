@@ -4,15 +4,12 @@ import '../../home/controllers/shell_controller.dart';
 import '../controllers/chat_controller.dart';
 import 'chat_room_view.dart';
 
-class ChatListView extends StatelessWidget {
+class ChatListView extends GetView<ChatController> {
   const ChatListView({super.key});
 
   @override
   Widget build(BuildContext context) {
     final shell = Get.find<ShellController>();
-    final controller = Get.put<ChatController>(
-      ChatController(chatRepository: Get.find()),
-    );
     final userId = shell.user.value?.id ?? '';
     return Scaffold(
       appBar: AppBar(title: const Text('Chat')),

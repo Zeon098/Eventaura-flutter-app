@@ -128,7 +128,7 @@ Create these indexes:
    - Query scope: Collection
 
 4. **Messages by sentAt**
-   - Collection ID: `chat_messages`
+   - Collection ID: `chats/{chatId}/chat_messages`
    - Fields to index:
      - `sentAt` (Descending)
    - Query scope: Collection group
@@ -137,18 +137,11 @@ Create these indexes:
 
 ### F. Setup Firebase Cloud Messaging (FCM)
 
-#### For Android:
-- FCM is automatically configured via `google-services.json`
-- No additional setup needed for Android
-
-#### For iOS:
 1. In Firebase Console → **Project settings** → **Cloud Messaging** tab
-2. Under **Apple app configuration**, click **Upload** next to APNs Authentication Key (or APNs Certificates)
-3. Upload your APNs authentication key (.p8 file) from Apple Developer Console
-   - Or upload APNs certificate if using certificate-based authentication
-4. Enter your Key ID and Team ID (found in Apple Developer Console)
-
-> **Note:** The legacy Cloud Messaging API is deprecated. The app uses Firebase Cloud Messaging API (V1) which is automatically configured when you run `flutterfire configure`.
+2. Under **Cloud Messaging API (Legacy)**, note your **Server Key** (optional, for backend)
+3. For iOS:
+   - Upload your APNs authentication key or certificate
+   - Add your App ID prefix and bundle ID
 
 ---
 

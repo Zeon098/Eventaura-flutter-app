@@ -6,14 +6,25 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/validators.dart';
 import '../controllers/profile_controller.dart';
 
-class ProfileView extends StatefulWidget {
+class ProfileView extends GetView<ProfileController> {
   const ProfileView({super.key});
 
   @override
-  State<ProfileView> createState() => _ProfileViewState();
+  Widget build(BuildContext context) {
+    return _ProfileContent(controller: controller);
+  }
 }
 
-class _ProfileViewState extends State<ProfileView> {
+class _ProfileContent extends StatefulWidget {
+  const _ProfileContent({required this.controller});
+
+  final ProfileController controller;
+
+  @override
+  State<_ProfileContent> createState() => _ProfileContentState();
+}
+
+class _ProfileContentState extends State<_ProfileContent> {
   final _profileForm = GlobalKey<FormState>();
   final _providerForm = GlobalKey<FormState>();
   final _name = TextEditingController();
@@ -21,9 +32,10 @@ class _ProfileViewState extends State<ProfileView> {
   final _business = TextEditingController();
   final _description = TextEditingController();
 
+  ProfileController get controller => widget.controller;
+
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<ProfileController>();
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: Obx(() {

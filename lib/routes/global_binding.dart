@@ -13,14 +13,14 @@ class GlobalBinding extends Bindings {
   void dependencies() {
     Get.put<AuthRepository>(AuthRepository(), permanent: true);
     Get.put<UserRepository>(UserRepository(), permanent: true);
-    Get.put<CloudinaryService>(CloudinaryService(), permanent: true);
-    Get.put<AlgoliaService>(AlgoliaService(), permanent: true);
-    Get.put<ServiceRepository>(
-      ServiceRepository(
-        cloudinaryService: Get.find(),
-        algoliaService: Get.find(),
+    Get.lazyPut<CloudinaryService>(() => CloudinaryService(), fenix: true);
+    Get.lazyPut<AlgoliaService>(() => AlgoliaService(), fenix: true);
+    Get.lazyPut<ServiceRepository>(
+      () => ServiceRepository(
+        cloudinaryService: Get.find<CloudinaryService>(),
+        algoliaService: Get.find<AlgoliaService>(),
       ),
-      permanent: true,
+      fenix: true,
     );
     Get.put<BookingRepository>(BookingRepository(), permanent: true);
     Get.put<ChatRepository>(ChatRepository(), permanent: true);

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/utils/snackbar_utils.dart';
@@ -100,6 +101,7 @@ class ProfileController extends GetxController {
       await userRepository.submitProviderRequest(request);
       SnackbarUtils.success('Submitted', 'Your request is pending approval');
     } catch (e) {
+      debugPrint('Provider request error: $e');
       SnackbarUtils.error('Provider request', e.toString());
     } finally {
       isSaving.value = false;
