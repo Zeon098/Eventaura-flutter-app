@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "605711901872",
+    "project_id": "eventaura-8bf9c",
+    "storage_bucket": "eventaura-8bf9c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:605711901872:android:a1f4c5c903ceb8b3600775",
+        "android_client_info": {
+          "package_name": "com.eventaura.app.eventaura_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "605711901872-gif6tij84978lqmdii12c6cdg40oiq16.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDAcX3nvtIZIDNwvbR2xOe46mtDoOHq9vs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "605711901872-gif6tij84978lqmdii12c6cdg40oiq16.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "605711901872-2tbojqahra8qec66uns39ncsgshuagrj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.eventaura.app.eventauraFlutter"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

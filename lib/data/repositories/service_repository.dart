@@ -1,0 +1,174 @@
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:uuid/uuid.dart';
+import '../../core/services/algolia_service.dart';
+import '../../core/services/cloudinary_service.dart';
+import '../../core/utils/app_constants.dart';
+import '../models/service_model.dart';
+
+class ServiceRepository {
+  ServiceRepository({
+    FirebaseFirestore? firestore,
+    CloudinaryService? cloudinaryService,
+    AlgoliaService? algoliaService,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _cloudinary = cloudinaryService ?? CloudinaryService(),
+       _algolia = algoliaService ?? AlgoliaService();
+
+  final FirebaseFirestore _firestore;
+  final CloudinaryService _cloudinary;
+  final AlgoliaService _algolia;
+  final _uuid = const Uuid();
+
+  Future<ServiceModel> createService({
+    required String providerId,
+    required String title,
+    required String category,
+    required double price,
+    required String description,
+    required String location,
+    required File cover,
+    List<File> gallery = const [],
+    double? latitude,
+    double? longitude,
+  }) async {
+    final coverUrl = await _cloudinary.uploadImage(
+      cover,
+      folder: 'services/covers',
+    );
+    final galleryUrls = <String>[];
+    for (final img in gallery.take(5)) {
+      galleryUrls.add(
+        await _cloudinary.uploadImage(img, folder: 'services/gallery'),
+      );
+    }
+    final id = _uuid.v4();
+    final service = ServiceModel(
+      id: id,
+      providerId: providerId,
+      title: title,
+      category: category,
+      price: price,
+      description: description,
+      location: location,
+      coverImage: coverUrl,
+      galleryImages: galleryUrls,
+      latitude: latitude,
+      longitude: longitude,
+    );
+    await _firestore
+        .collection(AppConstants.servicesCollection)
+        .doc(id)
+        .set(service.toMap());
+    await _indexService(service);
+    return service;
+  }
+
+  Future<void> updateService(
+    ServiceModel service, {
+    File? newCover,
+    List<File> newGallery = const [],
+  }) async {
+    String coverUrl = service.coverImage;
+    if (newCover != null) {
+      coverUrl = await _cloudinary.uploadImage(
+        newCover,
+        folder: 'services/covers',
+      );
+    }
+
+    List<String> galleryUrls = service.galleryImages;
+    if (newGallery.isNotEmpty) {
+      galleryUrls = [];
+      for (final img in newGallery.take(5)) {
+        galleryUrls.add(
+          await _cloudinary.uploadImage(img, folder: 'services/gallery'),
+        );
+      }
+    }
+
+    final updated = service.copyWith(
+      coverImage: coverUrl,
+      galleryImages: galleryUrls,
+    );
+    await _firestore
+        .collection(AppConstants.servicesCollection)
+        .doc(service.id)
+        .update(updated.toMap());
+    await _indexService(updated);
+  }
+
+  Future<void> deleteService(String id) async {
+    await _firestore
+        .collection(AppConstants.servicesCollection)
+        .doc(id)
+        .delete();
+    // Remove from Algolia index; ignore if it does not exist there yet.
+    try {
+      await _algolia.serviceIndex().object(id).deleteObject();
+    } catch (_) {}
+  }
+
+  Future<List<ServiceModel>> fetchProviderServices(String providerId) async {
+    final snap = await _firestore
+        .collection(AppConstants.servicesCollection)
+        .where('providerId', isEqualTo: providerId)
+        .get();
+    return snap.docs.map((d) => ServiceModel.fromMap(d.id, d.data())).toList();
+  }
+
+  Future<ServiceModel?> getService(String id) async {
+    final doc = await _firestore
+        .collection(AppConstants.servicesCollection)
+        .doc(id)
+        .get();
+    if (!doc.exists) return null;
+    return ServiceModel.fromMap(doc.id, doc.data() ?? {});
+  }
+
+  Stream<List<ServiceModel>> streamAllServices() {
+    return _firestore
+        .collection(AppConstants.servicesCollection)
+        .orderBy('rating', descending: true)
+        .snapshots()
+        .map(
+          (snap) => snap.docs
+              .map((d) => ServiceModel.fromMap(d.id, d.data()))
+              .toList(),
+        );
+  }
+
+  Stream<List<ServiceModel>> streamProviderServices(String providerId) {
+    return _firestore
+        .collection(AppConstants.servicesCollection)
+        .where('providerId', isEqualTo: providerId)
+        .snapshots()
+        .map(
+          (snap) => snap.docs
+              .map((d) => ServiceModel.fromMap(d.id, d.data()))
+              .toList(),
+        );
+  }
+
+  Future<void> _indexService(ServiceModel service) async {
+    final payload = {
+      'objectID': service.id,
+      'providerId': service.providerId,
+      'title': service.title,
+      'description': service.description,
+      'category': service.category,
+      'price': service.price,
+      'rating': service.rating,
+      'location': service.location,
+      'cover_image': service.coverImage,
+      'gallery_images': service.galleryImages.take(5).toList(),
+    };
+
+    if (service.latitude != null && service.longitude != null) {
+      // Algolia expects _geoloc for geo queries.
+      payload['_geoloc'] = {'lat': service.latitude, 'lng': service.longitude};
+    }
+
+    await _algolia.serviceIndex().addObject(payload);
+  }
+}
