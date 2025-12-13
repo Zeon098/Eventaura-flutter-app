@@ -105,7 +105,7 @@ class ServiceRepository {
         .delete();
     // Remove from Algolia index; ignore if it does not exist there yet.
     try {
-      await _algolia.serviceIndex().object(id).deleteObject();
+      await _algolia.serviceIndex(admin: true).object(id).deleteObject();
     } catch (_) {}
   }
 
@@ -169,6 +169,6 @@ class ServiceRepository {
       payload['_geoloc'] = {'lat': service.latitude, 'lng': service.longitude};
     }
 
-    await _algolia.serviceIndex().addObject(payload);
+    await _algolia.serviceIndex(admin: true).addObject(payload);
   }
 }

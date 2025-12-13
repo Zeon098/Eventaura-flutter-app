@@ -12,6 +12,7 @@ class AppConstants {
   // Environment keys (names used in .env)
   static const algoliaAppIdKey = 'ALGOLIA_APP_ID';
   static const algoliaApiKeyKey = 'ALGOLIA_SEARCH_API_KEY';
+  static const algoliaAdminKeyKey = 'ALGOLIA_ADMIN_API_KEY';
   static const cloudinaryCloudNameKey = 'CLOUDINARY_CLOUD_NAME';
   static const cloudinaryUploadPresetKey = 'CLOUDINARY_UPLOAD_PRESET';
 }

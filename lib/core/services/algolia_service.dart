@@ -3,13 +3,21 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../utils/app_constants.dart';
 
 class AlgoliaService {
-  late final Algolia _client;
+  late final Algolia _searchClient;
+  late final Algolia _adminClient;
 
   AlgoliaService() {
-    final appId = dotenv.env[AppConstants.algoliaAppIdKey];
-    final apiKey = dotenv.env[AppConstants.algoliaApiKeyKey];
-    _client = Algolia.init(applicationId: appId ?? '', apiKey: apiKey ?? '');
+    final appId = dotenv.env[AppConstants.algoliaAppIdKey] ?? '';
+    final searchKey = dotenv.env[AppConstants.algoliaApiKeyKey] ?? '';
+    final adminKey = dotenv.env[AppConstants.algoliaAdminKeyKey] ?? '';
+
+    _searchClient = Algolia.init(applicationId: appId, apiKey: searchKey);
+
+    _adminClient = adminKey.isNotEmpty
+        ? Algolia.init(applicationId: appId, apiKey: adminKey)
+        : _searchClient;
   }
 
-  AlgoliaIndexReference serviceIndex() => _client.instance.index('services');
+  AlgoliaIndexReference serviceIndex({bool admin = false}) =>
+      (admin ? _adminClient : _searchClient).instance.index('services');
 }

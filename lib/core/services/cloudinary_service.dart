@@ -25,7 +25,7 @@ class CloudinaryService {
       return response.secureUrl;
     } on CloudinaryException catch (e) {
       throw Exception(
-        'Cloudinary upload failed (${e.statusCode ?? '401?'}): ${e.message}. '
+        'Cloudinary upload failed (${e.statusCode}): ${e.message}. '
         'Check cloud name, unsigned upload preset, and that unsigned uploads are enabled.',
       );
     }

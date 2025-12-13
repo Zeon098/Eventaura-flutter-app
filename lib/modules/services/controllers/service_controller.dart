@@ -96,6 +96,7 @@ class ServiceController extends GetxController {
       );
       SnackbarUtils.success('Created', 'Service published');
     } catch (e) {
+      debugPrint('Error creating service: $e');
       SnackbarUtils.error('Service', e.toString());
     } finally {
       isLoading.value = false;

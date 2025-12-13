@@ -10,6 +10,7 @@ import '../../services/controllers/service_controller.dart';
 import '../../chat/controllers/chat_controller.dart';
 import '../../booking/controllers/booking_controller.dart';
 import '../controllers/shell_controller.dart';
+import '../../../core/stores/user_store.dart';
 
 class ShellBinding extends Bindings {
   @override
@@ -18,6 +19,7 @@ class ShellBinding extends Bindings {
       () => ShellController(
         authRepository: Get.find<AuthRepository>(),
         userRepository: Get.find<UserRepository>(),
+        userStore: Get.find<UserStore>(),
       ),
     );
     Get.lazyPut<ProfileController>(

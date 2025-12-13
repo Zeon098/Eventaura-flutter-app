@@ -7,12 +7,14 @@ import '../data/repositories/booking_repository.dart';
 import '../data/repositories/chat_repository.dart';
 import '../data/repositories/service_repository.dart';
 import '../data/repositories/user_repository.dart';
+import '../core/stores/user_store.dart';
 
 class GlobalBinding extends Bindings {
   @override
   void dependencies() {
     Get.put<AuthRepository>(AuthRepository(), permanent: true);
     Get.put<UserRepository>(UserRepository(), permanent: true);
+    Get.put<UserStore>(UserStore(), permanent: true);
     Get.lazyPut<CloudinaryService>(() => CloudinaryService(), fenix: true);
     Get.lazyPut<AlgoliaService>(() => AlgoliaService(), fenix: true);
     Get.lazyPut<ServiceRepository>(

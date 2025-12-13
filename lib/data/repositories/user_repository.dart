@@ -31,6 +31,14 @@ class UserRepository {
         .set(request.toMap());
   }
 
+  Future<void> patchUser(String id, Map<String, dynamic> data) async {
+    if (data.isEmpty) return;
+    await _firestore
+        .collection(AppConstants.usersCollection)
+        .doc(id)
+        .set(data, SetOptions(merge: true));
+  }
+
   Stream<AppUser> watchUser(String id) {
     return _firestore
         .collection(AppConstants.usersCollection)
