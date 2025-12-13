@@ -8,6 +8,7 @@ class AppConstants {
   static const bookingsCollection = 'bookings';
   static const chatsCollection = 'chats';
   static const messagesCollection = 'chat_messages';
+  static const messagesSubCollection = 'messages';
 
   // Environment keys (names used in .env)
   static const algoliaAppIdKey = 'ALGOLIA_APP_ID';

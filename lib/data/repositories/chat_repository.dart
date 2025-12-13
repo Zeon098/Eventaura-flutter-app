@@ -1,32 +1,43 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../../core/utils/app_constants.dart';
 import '../models/chat_message.dart';
 import '../models/chat_room.dart';
 
 class ChatRepository {
   ChatRepository({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _rooms = (firestore ?? FirebaseFirestore.instance).collection(
+        AppConstants.chatsCollection,
+      ),
+      _messagesRoot = (firestore ?? FirebaseFirestore.instance).collection(
+        AppConstants.messagesCollection,
+      );
 
-  final FirebaseFirestore _firestore;
+  final CollectionReference<Map<String, dynamic>> _rooms;
+  final CollectionReference<Map<String, dynamic>> _messagesRoot;
 
   Future<ChatRoom> createRoom(
     String bookingId,
     List<String> participants,
   ) async {
-    final ref = _firestore.collection(AppConstants.chatsCollection).doc();
+    final ref = _rooms.doc();
     final now = DateTime.now();
     final room = ChatRoom(
       id: ref.id,
       bookingId: bookingId,
       participantIds: participants,
       lastMessage: '',
+      lastMessageType: 'text',
       updatedAt: now,
+      typing: const {},
     );
     await ref.set({
       'bookingId': bookingId,
       'participantIds': participants,
       'lastMessage': '',
+      'lastMessageType': 'text',
       'updatedAt': FieldValue.serverTimestamp(),
+      'typing': {},
     });
     return room;
   }
@@ -35,21 +46,24 @@ class ChatRepository {
     String bookingId,
     List<String> participants,
   ) async {
-    final existing = await _firestore
-        .collection(AppConstants.chatsCollection)
-        .where('bookingId', isEqualTo: bookingId)
-        .limit(1)
+    if (participants.isEmpty) return createRoom(bookingId, participants);
+    final primary = participants.first;
+    final snap = await _rooms
+        .where('participantIds', arrayContains: primary)
         .get();
-    if (existing.docs.isNotEmpty) {
-      final doc = existing.docs.first;
-      return ChatRoom.fromMap(doc.id, doc.data());
+
+    for (final doc in snap.docs) {
+      final ids = List<String>.from(doc.data()['participantIds'] ?? []);
+      if (_sameParticipants(ids, participants)) {
+        return ChatRoom.fromMap(doc.id, doc.data());
+      }
     }
+
     return createRoom(bookingId, participants);
   }
 
   Stream<List<ChatRoom>> watchRooms(String userId) {
-    return _firestore
-        .collection(AppConstants.chatsCollection)
+    return _rooms
         .where('participantIds', arrayContains: userId)
         .orderBy('updatedAt', descending: true)
         .snapshots()
@@ -59,12 +73,17 @@ class ChatRepository {
         );
   }
 
+  Stream<ChatRoom> watchRoom(String roomId) {
+    return _rooms.doc(roomId).snapshots().map((snap) {
+      return ChatRoom.fromMap(snap.id, snap.data() ?? {});
+    });
+  }
+
   Stream<List<ChatMessage>> watchMessages(String roomId) {
-    return _firestore
-        .collection(AppConstants.chatsCollection)
+    return _messagesRoot
         .doc(roomId)
-        .collection(AppConstants.messagesCollection)
-        .orderBy('sentAt', descending: true)
+        .collection(AppConstants.messagesSubCollection)
+        .orderBy('sentAt', descending: false)
         .snapshots()
         .map(
           (snap) => snap.docs
@@ -74,10 +93,28 @@ class ChatRepository {
   }
 
   Future<void> sendMessage(String roomId, ChatMessage message) async {
-    final ref = _firestore
-        .collection(AppConstants.chatsCollection)
+    // Verify sender is a participant before attempting write
+    final roomSnap = await _rooms.doc(roomId).get();
+    if (!roomSnap.exists) {
+      throw Exception('Chat room not found: $roomId');
+    }
+    final participants = List<String>.from(
+      roomSnap.data()?['participantIds'] ?? [],
+    );
+    debugPrint('✅ Room $roomId participants: $participants');
+    debugPrint('✅ Message senderId: ${message.senderId}');
+    if (!participants.contains(message.senderId)) {
+      throw Exception(
+        'Sender ${message.senderId} is not a participant. Room has: $participants',
+      );
+    }
+    debugPrint(
+      '✅ Sender validated as participant, proceeding with Firestore write...',
+    );
+
+    final ref = _messagesRoot
         .doc(roomId)
-        .collection(AppConstants.messagesCollection)
+        .collection(AppConstants.messagesSubCollection)
         .doc(message.id);
     await ref.set({
       'senderId': message.senderId,
@@ -85,12 +122,30 @@ class ChatRepository {
       'type': message.type,
       'sentAt': FieldValue.serverTimestamp(),
     });
-    await _firestore
-        .collection(AppConstants.chatsCollection)
-        .doc(roomId)
-        .update({
-          'lastMessage': message.content,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+
+    await _rooms.doc(roomId).set({
+      'lastMessage': message.type == 'image' ? '[Image]' : message.content,
+      'lastMessageType': message.type,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> setTyping(String roomId, String userId, bool isTyping) async {
+    await _rooms.doc(roomId).set({
+      'typing': {userId: isTyping},
+    }, SetOptions(merge: true));
+  }
+
+  Future<ChatRoom?> fetchRoom(String roomId) async {
+    final snap = await _rooms.doc(roomId).get();
+    if (!snap.exists) return null;
+    return ChatRoom.fromMap(snap.id, snap.data() ?? {});
+  }
+
+  bool _sameParticipants(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    final sa = a.toSet();
+    final sb = b.toSet();
+    return sa.length == sb.length && sa.containsAll(sb);
   }
 }

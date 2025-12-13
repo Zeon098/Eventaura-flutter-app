@@ -37,7 +37,13 @@ class ShellBinding extends Bindings {
       fenix: true,
     );
     Get.lazyPut<ChatController>(
-      () => ChatController(chatRepository: Get.find<ChatRepository>()),
+      () => ChatController(
+        chatRepository: Get.find<ChatRepository>(),
+        cloudinaryService: Get.find<CloudinaryService>(),
+        userRepository: Get.find<UserRepository>(),
+        userStore: Get.find<UserStore>(),
+        pushNotificationService: Get.find<PushNotificationService>(),
+      ),
       fenix: true,
     );
     Get.lazyPut<BookingController>(

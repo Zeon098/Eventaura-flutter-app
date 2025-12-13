@@ -23,18 +23,15 @@ class PushNotificationService {
       importance: Importance.high,
     );
 
-    final androidPlugin =
-        _local.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _local
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.createNotificationChannel(androidChannel);
   }
 
   Future<void> requestPermission() async {
-    await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    await _messaging.requestPermission(alert: true, badge: true, sound: true);
   }
 
   Future<String?> getToken() => _messaging.getToken();
@@ -58,7 +55,8 @@ class PushNotificationService {
       });
       debugPrint('📣 Notification queued in Firestore');
       debugPrint(
-          'ℹ️ Note: Background notifications (app killed) require Cloud Functions or backend server');
+        'ℹ️ Note: Background notifications (app killed) require Cloud Functions or backend server',
+      );
     } catch (e) {
       debugPrint('Error sending notification: $e');
       rethrow;
@@ -75,20 +73,20 @@ class PushNotificationService {
           .where('read', isEqualTo: false)
           .snapshots()
           .listen((snapshot) {
-        for (final doc in snapshot.docChanges) {
-          if (doc.type == DocumentChangeType.added) {
-            final data = doc.doc.data();
-            if (data != null) {
-              _showLocalNotification(
-                data['title'] ?? 'Notification',
-                data['body'] ?? '',
-              );
-              // Mark as read
-              doc.doc.reference.update({'read': true});
+            for (final doc in snapshot.docChanges) {
+              if (doc.type == DocumentChangeType.added) {
+                final data = doc.doc.data();
+                if (data != null) {
+                  _showLocalNotification(
+                    data['title'] ?? 'Notification',
+                    data['body'] ?? '',
+                  );
+                  // Mark as read
+                  doc.doc.reference.update({'read': true});
+                }
+              }
             }
-          }
-        }
-      });
+          });
     });
   }
 
@@ -139,24 +137,27 @@ class PushNotificationService {
 
   // Check for pending notifications when app opens
   Future<void> checkPendingNotifications() async {
-    final token = await _messaging.getToken();
-    if (token == null) return;
+    try {
+      final token = await _messaging.getToken();
+      if (token == null) return;
 
-    final snapshot = await _firestore
-        .collection('notifications')
-        .where('targetToken', isEqualTo: token)
-        .where('read', isEqualTo: false)
-        .orderBy('createdAt', descending: true)
-        .limit(10)
-        .get();
+      final snapshot = await _firestore
+          .collection('notifications')
+          .where('targetToken', isEqualTo: token)
+          .where('read', isEqualTo: false)
+          .limit(10)
+          .get();
 
-    for (final doc in snapshot.docs) {
-      final data = doc.data();
-      _showLocalNotification(
-        data['title'] ?? 'Notification',
-        data['body'] ?? '',
-      );
-      doc.reference.update({'read': true});
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        _showLocalNotification(
+          data['title'] ?? 'Notification',
+          data['body'] ?? '',
+        );
+        doc.reference.update({'read': true});
+      }
+    } catch (e) {
+      debugPrint('Error checking pending notifications: $e');
     }
   }
 }
