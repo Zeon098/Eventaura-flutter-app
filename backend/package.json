@@ -1,0 +1,23 @@
+{
+  "name": "eventaura-notification-server",
+  "version": "1.0.0",
+  "description": "Free backend server for FCM notifications via Firestore",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "fcm",
+    "firebase",
+    "notifications",
+    "firestore"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

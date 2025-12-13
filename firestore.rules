@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() { return request.auth != null; }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /services/{serviceId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /bookings/{bookingId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.consumerId ||
+        request.auth.uid == resource.data.providerId
+      );
+      allow create: if isSignedIn() &&
+        request.resource.data.consumerId == request.auth.uid &&
+        request.resource.data.serviceId is string &&
+        request.resource.data.providerId is string;
+      allow update: if isSignedIn() && (
+        request.auth.uid == resource.data.consumerId ||
+        request.auth.uid == resource.data.providerId
+      );
+      allow delete: if false;
+    }
+
+    match /chats/{chatId} {
+      // Allow list/query by any authenticated user (they can only see their own via client filter)
+      allow list: if isSignedIn();
+      // Document reads/writes require user is participant
+      allow get: if isSignedIn() &&
+        request.auth.uid in resource.data.participantIds;
+      allow create: if isSignedIn() &&
+        request.auth.uid in request.resource.data.participantIds;
+      allow update: if isSignedIn() &&
+        request.auth.uid in resource.data.participantIds;
+      
+      match /chat_messages/{messageId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn();
+      }
+    }
+
+    match /notifications/{notificationId} {
+      allow create: if isSignedIn();
+      allow read, update: if isSignedIn();
+    }
+  }
+}

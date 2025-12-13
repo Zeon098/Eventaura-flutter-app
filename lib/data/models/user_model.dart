@@ -8,6 +8,7 @@ class AppUser extends Equatable {
   final String? city;
   final double? latitude;
   final double? longitude;
+  final String? fcmToken;
   final bool isProvider;
   final String providerStatus; // pending | approved | rejected | none
 
@@ -19,6 +20,7 @@ class AppUser extends Equatable {
     this.city,
     this.latitude,
     this.longitude,
+    this.fcmToken,
     this.isProvider = false,
     this.providerStatus = 'none',
   });
@@ -31,6 +33,7 @@ class AppUser extends Equatable {
     String? city,
     double? latitude,
     double? longitude,
+    String? fcmToken,
     bool? isProvider,
     String? providerStatus,
   }) {
@@ -42,6 +45,7 @@ class AppUser extends Equatable {
       city: city ?? this.city,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      fcmToken: fcmToken ?? this.fcmToken,
       isProvider: isProvider ?? this.isProvider,
       providerStatus: providerStatus ?? this.providerStatus,
     );
@@ -55,6 +59,7 @@ class AppUser extends Equatable {
       'city': city,
       'latitude': latitude,
       'longitude': longitude,
+      'fcmToken': fcmToken,
       'isProvider': isProvider,
       'providerStatus': providerStatus,
     };
@@ -69,6 +74,7 @@ class AppUser extends Equatable {
       city: map['city'],
       latitude: (map['latitude'] as num?)?.toDouble(),
       longitude: (map['longitude'] as num?)?.toDouble(),
+      fcmToken: map['fcmToken'],
       isProvider: map['isProvider'] ?? false,
       providerStatus: map['providerStatus'] ?? 'none',
     );
@@ -83,6 +89,7 @@ class AppUser extends Equatable {
     city,
     latitude,
     longitude,
+    fcmToken,
     isProvider,
     providerStatus,
   ];

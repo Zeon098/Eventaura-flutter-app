@@ -9,7 +9,10 @@ import 'routes/app_pages.dart';
 import 'routes/global_binding.dart';
 
 @pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await FirebaseInitializer.init();
+  await PushNotificationService.handleBackgroundMessage(message);
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +30,7 @@ Future<void> main() async {
   await push.initLocalNotifications();
   await push.requestPermission();
   push.listenForeground();
+  // Note: User-specific notification listening starts after login in ShellController
   runApp(const EventauraApp());
 }
 

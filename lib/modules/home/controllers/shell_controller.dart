@@ -5,17 +5,20 @@ import '../../../data/models/user_model.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/user_repository.dart';
 import '../../../core/stores/user_store.dart';
+import '../../../core/services/firebase/push_notification_service.dart';
 
 class ShellController extends GetxController {
   ShellController({
     required this.authRepository,
     required this.userRepository,
     required this.userStore,
+    required this.pushNotificationService,
   });
 
   final AuthRepository authRepository;
   final UserRepository userRepository;
   final UserStore userStore;
+  final PushNotificationService pushNotificationService;
 
   final tabIndex = 0.obs;
   final user = Rxn<AppUser>();
@@ -39,6 +42,8 @@ class ShellController extends GetxController {
       if (appUser.displayName != null)
         updates['displayName'] = appUser.displayName;
       if (appUser.photoUrl != null) updates['photoUrl'] = appUser.photoUrl;
+      final token = await pushNotificationService.getToken();
+      if (token != null) updates['fcmToken'] = token;
       await userRepository.patchUser(appUser.id, updates);
 
       await _userSub?.cancel();
@@ -48,6 +53,10 @@ class ShellController extends GetxController {
         userStore.setUser(profile);
         isLoading.value = false;
       });
+
+      // Start listening for notifications and check for any pending ones
+      pushNotificationService.listenForNotifications(appUser.id);
+      await pushNotificationService.checkPendingNotifications();
     });
   }
 
