@@ -11,7 +11,7 @@ const db = admin.firestore();
 const messaging = admin.messaging();
 
 console.log('🚀 Notification server started');
-console.log('👀 Watching Firestore for new notifications...');
+console.log('👀 Watching Firestore for notifications and provider approvals...');
 
 // Watch for new notifications in Firestore
 db.collection('notifications')
@@ -68,6 +68,52 @@ db.collection('notifications')
   }, (error) => {
     console.error('Error watching Firestore:', error);
   });
+
+// Watch for provider status changes
+db.collection('users').onSnapshot(async (snapshot) => {
+  for (const change of snapshot.docChanges()) {
+    if (change.type === 'modified') {
+      const before = change.doc.data();
+      const after = change.doc.data();
+      const userId = change.doc.id;
+
+      // Only process if we have previous state (not initial load)
+      if (before.providerStatus !== after.providerStatus) {
+        const newStatus = after.providerStatus;
+        const fcmToken = after.fcmToken;
+
+        if (fcmToken && (newStatus === 'approved' || newStatus === 'rejected')) {
+          try {
+            console.log(`📢 Provider status changed for ${userId}: ${newStatus}`);
+            
+            await db.collection('notifications').add({
+              targetToken: fcmToken,
+              title: newStatus === 'approved' 
+                ? 'Provider Request Approved! 🎉' 
+                : 'Provider Request Update',
+              body: newStatus === 'approved'
+                ? 'Congratulations! You can now create services.'
+                : 'Your provider request has been reviewed.',
+              data: {
+                type: 'provider_approval',
+                approved: (newStatus === 'approved').toString(),
+                userId: userId,
+              },
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              read: false,
+            });
+            
+            console.log('✅ Provider notification queued');
+          } catch (error) {
+            console.error('❌ Error queueing provider notification:', error);
+          }
+        }
+      }
+    }
+  }
+}, (error) => {
+  console.error('Error watching users:', error);
+});
 
 // Keep the process running
 process.on('SIGINT', () => {

@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/user_repository.dart';
 import '../../profile/controllers/profile_controller.dart';
@@ -40,9 +41,8 @@ class ShellBinding extends Bindings {
       () => ChatController(
         chatRepository: Get.find<ChatRepository>(),
         cloudinaryService: Get.find<CloudinaryService>(),
-        userRepository: Get.find<UserRepository>(),
         userStore: Get.find<UserStore>(),
-        pushNotificationService: Get.find<PushNotificationService>(),
+        notificationService: Get.find<NotificationService>(),
       ),
       fenix: true,
     );
@@ -51,7 +51,8 @@ class ShellBinding extends Bindings {
         bookingRepository: Get.find<BookingRepository>(),
         chatRepository: Get.find<ChatRepository>(),
         userRepository: Get.find<UserRepository>(),
-        pushNotificationService: Get.find<PushNotificationService>(),
+        notificationService: Get.find<NotificationService>(),
+        userStore: Get.find<UserStore>(),
       ),
       fenix: true,
     );

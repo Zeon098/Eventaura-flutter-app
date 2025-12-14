@@ -1,23 +1,26 @@
 import 'package:get/get.dart';
+import '../../../core/services/notification_service.dart';
+import '../../../core/stores/user_store.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import '../../../data/models/booking_model.dart';
 import '../../../data/repositories/booking_repository.dart';
 import '../../../data/repositories/chat_repository.dart';
 import '../../../data/repositories/user_repository.dart';
-import '../../../core/services/firebase/push_notification_service.dart';
 
 class BookingController extends GetxController {
   BookingController({
     required this.bookingRepository,
     required this.chatRepository,
     required this.userRepository,
-    required this.pushNotificationService,
+    required this.notificationService,
+    required this.userStore,
   });
 
   final BookingRepository bookingRepository;
   final ChatRepository chatRepository;
   final UserRepository userRepository;
-  final PushNotificationService pushNotificationService;
+  final NotificationService notificationService;
+  final UserStore userStore;
   final bookings = <BookingModel>[].obs;
   final isLoading = false.obs;
 
@@ -40,10 +43,12 @@ class BookingController extends GetxController {
         providerId: providerId,
       );
       await chatRepository.ensureRoom(booking.id, [consumerId, providerId]);
-      await _notifyProvider(
+      final consumerName = userStore.value?.displayName;
+      await notificationService.notifyNewBooking(
         providerId: providerId,
-        serviceTitle: serviceTitle ?? 'New booking',
         bookingId: booking.id,
+        serviceTitle: serviceTitle ?? 'service',
+        consumerName: consumerName,
       );
       SnackbarUtils.success('Booking created', 'Provider will respond soon');
       return booking;
@@ -58,33 +63,18 @@ class BookingController extends GetxController {
   Future<void> updateStatus(String id, String status) async {
     try {
       await bookingRepository.updateStatus(id, status);
+      final booking = await bookingRepository.getBooking(id);
+      if (booking != null) {
+        final providerName = userStore.value?.displayName;
+        await notificationService.notifyBookingStatusChange(
+          booking: booking,
+          status: status,
+          providerName: providerName,
+        );
+      }
       SnackbarUtils.success('Booking', 'Status updated to $status');
     } catch (e) {
       SnackbarUtils.error('Booking', e.toString());
-    }
-  }
-
-  Future<void> _notifyProvider({
-    required String providerId,
-    required String serviceTitle,
-    required String bookingId,
-  }) async {
-    try {
-      final provider = await userRepository.fetchUser(providerId);
-      final token = provider.fcmToken;
-      if (token == null || token.isEmpty) return;
-      await pushNotificationService.sendPushToToken(
-        token: token,
-        title: 'New booking request',
-        body: 'Someone requested "$serviceTitle"',
-        data: {
-          'type': 'booking',
-          'bookingId': bookingId,
-          'providerId': providerId,
-        },
-      );
-    } catch (_) {
-      // Ignore push failures to keep booking flow resilient.
     }
   }
 }

@@ -1,32 +1,28 @@
 import 'dart:io';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/services/cloudinary_service.dart';
-import '../../../core/services/firebase/push_notification_service.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../core/stores/user_store.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import '../../../data/models/chat_message.dart';
 import '../../../data/models/chat_room.dart';
-import '../../../data/models/user_model.dart';
 import '../../../data/repositories/chat_repository.dart';
-import '../../../data/repositories/user_repository.dart';
 
 class ChatController extends GetxController {
   ChatController({
     required this.chatRepository,
     required this.cloudinaryService,
-    required this.userRepository,
     required this.userStore,
-    required this.pushNotificationService,
+    required this.notificationService,
   });
 
   final ChatRepository chatRepository;
   final CloudinaryService cloudinaryService;
-  final UserRepository userRepository;
   final UserStore userStore;
-  final PushNotificationService pushNotificationService;
+  final NotificationService notificationService;
   final _uuid = const Uuid();
   final isSending = false.obs;
   final isUploadingImage = false.obs;
@@ -104,27 +100,17 @@ class ChatController extends GetxController {
   Future<void> _notifyParticipants(String roomId, ChatMessage message) async {
     final room = await chatRepository.fetchRoom(roomId);
     if (room == null) return;
-    final sender = userStore.value;
-    final title = sender?.displayName?.isNotEmpty == true
-        ? '${sender!.displayName} sent a message'
-        : 'New message';
-    final body = message.type == 'image' ? 'Sent an image' : message.content;
+    final senderName = userStore.value?.displayName;
 
     for (final participantId in room.participantIds) {
       if (participantId == message.senderId) continue;
-      AppUser? target;
-      try {
-        target = await userRepository.fetchUser(participantId);
-      } catch (_) {
-        continue;
-      }
-      final token = target.fcmToken;
-      if (token == null || token.isEmpty) continue;
-      await pushNotificationService.sendPushToToken(
-        token: token,
-        title: title,
-        body: body,
-        data: {'type': 'chat', 'roomId': roomId, 'senderId': message.senderId},
+      await notificationService.notifyNewMessage(
+        recipientId: participantId,
+        roomId: roomId,
+        senderId: message.senderId,
+        messageType: message.type,
+        messageContent: message.type == 'text' ? message.content : null,
+        senderName: senderName,
       );
     }
   }

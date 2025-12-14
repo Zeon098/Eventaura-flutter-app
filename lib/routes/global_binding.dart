@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../core/services/algolia_service.dart';
 import '../core/services/cloudinary_service.dart';
 import '../core/services/firebase/push_notification_service.dart';
+import '../core/services/notification_service.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/booking_repository.dart';
 import '../data/repositories/chat_repository.dart';
@@ -28,6 +29,13 @@ class GlobalBinding extends Bindings {
     Get.put<ChatRepository>(ChatRepository(), permanent: true);
     Get.put<PushNotificationService>(
       PushNotificationService(),
+      permanent: true,
+    );
+    Get.put<NotificationService>(
+      NotificationService(
+        pushNotificationService: Get.find<PushNotificationService>(),
+        userRepository: Get.find<UserRepository>(),
+      ),
       permanent: true,
     );
   }

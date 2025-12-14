@@ -32,7 +32,8 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
         bookingRepository: Get.find(),
         chatRepository: Get.find(),
         userRepository: Get.find<UserRepository>(),
-        pushNotificationService: Get.find(),
+        notificationService: Get.find(),
+        userStore: Get.find(),
       ),
       tag: service.id,
     );
