@@ -55,5 +55,9 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow read, update: if isSignedIn();
     }
+
+    match /provider_requests/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
   }
 }

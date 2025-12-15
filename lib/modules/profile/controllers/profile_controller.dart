@@ -1,37 +1,41 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/utils/snackbar_utils.dart';
-import '../../../data/models/provider_request_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/user_repository.dart';
 import '../../../core/services/cloudinary_service.dart';
+import '../../../core/stores/user_store.dart';
 
 class ProfileController extends GetxController {
   ProfileController({
     required this.authRepository,
     required this.userRepository,
     required this.cloudinaryService,
+    required this.userStore,
   });
 
   final AuthRepository authRepository;
   final UserRepository userRepository;
   final CloudinaryService cloudinaryService;
+  final UserStore userStore;
 
   final user = Rxn<AppUser>();
   final isSaving = false.obs;
   final picker = ImagePicker();
   File? avatarFile;
-  File? cnicFront;
-  File? cnicBack;
 
   @override
   void onInit() {
     super.onInit();
+    ever<AppUser?>(userStore.user, (profile) {
+      if (profile != null) user.value = profile;
+    });
+    final current = userStore.value;
+    if (current != null) user.value = current;
     authRepository.userChanges.listen((appUser) async {
-      if (appUser != null) {
+      if (appUser != null && user.value == null) {
         user.value = await userRepository.fetchUser(appUser.id);
       }
     });
@@ -67,42 +71,6 @@ class ProfileController extends GetxController {
       SnackbarUtils.success('Saved', 'Profile updated');
     } catch (e) {
       SnackbarUtils.error('Profile', e.toString());
-    } finally {
-      isSaving.value = false;
-    }
-  }
-
-  Future<void> submitProvider({
-    required String businessName,
-    required String description,
-  }) async {
-    if (user.value == null) return;
-    try {
-      if (cnicFront == null || cnicBack == null) {
-        SnackbarUtils.error('Missing files', 'Upload CNIC images');
-        return;
-      }
-      isSaving.value = true;
-      final frontUrl = await cloudinaryService.uploadImage(
-        cnicFront!,
-        folder: 'cnic',
-      );
-      final backUrl = await cloudinaryService.uploadImage(
-        cnicBack!,
-        folder: 'cnic',
-      );
-      final request = ProviderRequest(
-        userId: user.value!.id,
-        businessName: businessName,
-        description: description,
-        cnicFrontUrl: frontUrl,
-        cnicBackUrl: backUrl,
-      );
-      await userRepository.submitProviderRequest(request);
-      SnackbarUtils.success('Submitted', 'Your request is pending approval');
-    } catch (e) {
-      debugPrint('Provider request error: $e');
-      SnackbarUtils.error('Provider request', e.toString());
     } finally {
       isSaving.value = false;
     }

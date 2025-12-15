@@ -7,6 +7,7 @@ import '../../../core/services/cloudinary_service.dart';
 import '../../../data/repositories/service_repository.dart';
 import '../../../data/repositories/chat_repository.dart';
 import '../../../data/repositories/booking_repository.dart';
+import '../../../data/repositories/provider_request_repository.dart';
 import '../../services/controllers/service_controller.dart';
 import '../../chat/controllers/chat_controller.dart';
 import '../../booking/controllers/booking_controller.dart';
@@ -23,6 +24,7 @@ class ShellBinding extends Bindings {
         userRepository: Get.find<UserRepository>(),
         userStore: Get.find<UserStore>(),
         pushNotificationService: Get.find<PushNotificationService>(),
+        providerRequestRepository: Get.find<ProviderRequestRepository>(),
       ),
     );
     Get.lazyPut<ProfileController>(
@@ -30,6 +32,7 @@ class ShellBinding extends Bindings {
         authRepository: Get.find<AuthRepository>(),
         userRepository: Get.find<UserRepository>(),
         cloudinaryService: Get.find<CloudinaryService>(),
+        userStore: Get.find<UserStore>(),
       ),
       fenix: true,
     );

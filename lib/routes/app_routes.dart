@@ -9,4 +9,5 @@ abstract class Routes {
   static const bookingDetail = '/booking/detail';
   static const chatRoom = '/chat/room';
   static const profile = '/profile';
+  static const providerRequest = '/provider/request';
 }

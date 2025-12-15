@@ -18,11 +18,14 @@ class ShellView extends GetView<ShellController> {
       if (controller.isLoading.value) {
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
+      final isProvider =
+          controller.user.value?.role == 'provider' ||
+          controller.user.value?.providerStatus == 'approved';
       final pages = <Widget>[
         const HomeView(),
         const ChatListView(),
         const BookingListView(),
-        if (controller.user.value?.providerStatus == 'approved')
+        if (isProvider)
           const ProviderServicesView()
         else
           const ServiceExploreView(),

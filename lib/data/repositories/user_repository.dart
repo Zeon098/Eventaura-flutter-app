@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/utils/app_constants.dart';
-import '../models/provider_request_model.dart';
 import '../models/user_model.dart';
 
 class UserRepository {
@@ -22,13 +21,6 @@ class UserRepository {
         .doc(id)
         .get();
     return AppUser.fromMap(id, snap.data() ?? {});
-  }
-
-  Future<void> submitProviderRequest(ProviderRequest request) async {
-    await _firestore
-        .collection(AppConstants.providerRequestsCollection)
-        .doc(request.userId)
-        .set(request.toMap());
   }
 
   Future<void> patchUser(String id, Map<String, dynamic> data) async {

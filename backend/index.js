@@ -15,7 +15,7 @@ console.log('👀 Watching Firestore for notifications and provider approvals...
 
 // Watch for new notifications in Firestore
 db.collection('notifications')
-  .where('read', '==', false)
+  .where('processed', '==', false)
   .onSnapshot(async (snapshot) => {
     for (const change of snapshot.docChanges()) {
       if (change.type === 'added') {
@@ -50,17 +50,17 @@ db.collection('notifications')
           await messaging.send(message);
           console.log('✅ Notification sent successfully');
           
-          // Mark as read
-          await doc.ref.update({ read: true });
-          console.log('✓ Marked as read');
+          // Mark as processed
+          await doc.ref.update({ processed: true });
+          console.log('✓ Marked as processed');
         } catch (error) {
           console.error('❌ Error sending notification:', error.message);
           
           // If token is invalid, mark as read to avoid retries
           if (error.code === 'messaging/invalid-registration-token' ||
               error.code === 'messaging/registration-token-not-registered') {
-            console.log('⚠️ Invalid token, marking as read');
-            await doc.ref.update({ read: true });
+            console.log('⚠️ Invalid token, marking as processed');
+            await doc.ref.update({ processed: true });
           }
         }
       }
@@ -70,15 +70,19 @@ db.collection('notifications')
   });
 
 // Watch for provider status changes
+const providerStatusCache = new Map();
+
 db.collection('users').onSnapshot(async (snapshot) => {
   for (const change of snapshot.docChanges()) {
     if (change.type === 'modified') {
-      const before = change.doc.data();
-      const after = change.doc.data();
       const userId = change.doc.id;
+      const after = change.doc.data();
+      const before = providerStatusCache.get(userId);
+      
+      providerStatusCache.set(userId, after.providerStatus);
 
-      // Only process if we have previous state (not initial load)
-      if (before.providerStatus !== after.providerStatus) {
+      // Only process if status actually changed
+      if (before && before !== after.providerStatus) {
         const newStatus = after.providerStatus;
         const fcmToken = after.fcmToken;
 
@@ -100,7 +104,7 @@ db.collection('users').onSnapshot(async (snapshot) => {
                 userId: userId,
               },
               createdAt: admin.firestore.FieldValue.serverTimestamp(),
-              read: false,
+              processed: false,
             });
             
             console.log('✅ Provider notification queued');

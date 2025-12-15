@@ -43,68 +43,24 @@ class PushNotificationService {
     Map<String, dynamic>? data,
   }) async {
     try {
-      // Store notification in Firestore
-      // Will be delivered when recipient app is open or comes back online
+      // Store notification in Firestore for backend to process
       await _firestore.collection('notifications').add({
         'targetToken': token,
         'title': title,
         'body': body,
         'data': data ?? {},
         'createdAt': FieldValue.serverTimestamp(),
-        'read': false,
+        'processed': false,
       });
-      debugPrint('📣 Notification queued in Firestore');
-      debugPrint(
-        'ℹ️ Note: Background notifications (app killed) require Cloud Functions or backend server',
-      );
+      debugPrint('📣 Notification queued for backend FCM delivery');
     } catch (e) {
-      debugPrint('Error sending notification: $e');
+      debugPrint('Error queueing notification: $e');
       rethrow;
     }
   }
 
-  void listenForNotifications(String userId) {
-    _messaging.getToken().then((token) {
-      if (token == null) return;
-
-      _firestore
-          .collection('notifications')
-          .where('targetToken', isEqualTo: token)
-          .where('read', isEqualTo: false)
-          .snapshots()
-          .listen((snapshot) {
-            for (final doc in snapshot.docChanges) {
-              if (doc.type == DocumentChangeType.added) {
-                final data = doc.doc.data();
-                if (data != null) {
-                  _showLocalNotification(
-                    data['title'] ?? 'Notification',
-                    data['body'] ?? '',
-                  );
-                  // Mark as read
-                  doc.doc.reference.update({'read': true});
-                }
-              }
-            }
-          });
-    });
-  }
-
-  void _showLocalNotification(String title, String body) {
-    _local.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title,
-      body,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'default_channel',
-          'General Notifications',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-      ),
-    );
-  }
+  // Removed: Firestore listener caused duplicate notifications
+  // FCM handles delivery directly via listenForeground()
 
   void listenForeground() {
     FirebaseMessaging.onMessage.listen((message) {
@@ -135,29 +91,5 @@ class PushNotificationService {
     // FCM automatically shows notification in system tray when app is in background
   }
 
-  // Check for pending notifications when app opens
-  Future<void> checkPendingNotifications() async {
-    try {
-      final token = await _messaging.getToken();
-      if (token == null) return;
-
-      final snapshot = await _firestore
-          .collection('notifications')
-          .where('targetToken', isEqualTo: token)
-          .where('read', isEqualTo: false)
-          .limit(10)
-          .get();
-
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
-        _showLocalNotification(
-          data['title'] ?? 'Notification',
-          data['body'] ?? '',
-        );
-        doc.reference.update({'read': true});
-      }
-    } catch (e) {
-      debugPrint('Error checking pending notifications: $e');
-    }
-  }
+  // Removed: Pending notifications are handled by FCM
 }

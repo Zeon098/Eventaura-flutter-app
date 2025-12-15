@@ -1,9 +1,10 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/validators.dart';
+import '../../../data/models/user_model.dart';
+import '../../../routes/app_routes.dart';
+import '../../home/controllers/shell_controller.dart';
 import '../controllers/profile_controller.dart';
 
 class ProfileView extends GetView<ProfileController> {
@@ -26,11 +27,8 @@ class _ProfileContent extends StatefulWidget {
 
 class _ProfileContentState extends State<_ProfileContent> {
   final _profileForm = GlobalKey<FormState>();
-  final _providerForm = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _city = TextEditingController();
-  final _business = TextEditingController();
-  final _description = TextEditingController();
 
   ProfileController get controller => widget.controller;
 
@@ -152,94 +150,7 @@ class _ProfileContentState extends State<_ProfileContent> {
                 ),
               ),
               const SizedBox(height: 16),
-              _glassCard(
-                child: Form(
-                  key: _providerForm,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Become provider',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _business,
-                        decoration: const InputDecoration(
-                          labelText: 'Business name',
-                        ),
-                        validator: Validators.notEmpty,
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _description,
-                        decoration: const InputDecoration(
-                          labelText: 'Description',
-                        ),
-                        maxLines: 3,
-                        validator: (v) =>
-                            Validators.minLength(v, 10, label: 'Description'),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          _uploadButton(
-                            'CNIC Front',
-                            onTap: () async {
-                              final picked = await controller.picker.pickImage(
-                                source: ImageSource.gallery,
-                                imageQuality: 80,
-                              );
-                              if (picked != null)
-                                controller.cnicFront = File(picked.path);
-                              setState(() {});
-                            },
-                          ),
-                          const SizedBox(width: 12),
-                          _uploadButton(
-                            'CNIC Back',
-                            onTap: () async {
-                              final picked = await controller.picker.pickImage(
-                                source: ImageSource.gallery,
-                                imageQuality: 80,
-                              );
-                              if (picked != null)
-                                controller.cnicBack = File(picked.path);
-                              setState(() {});
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Obx(
-                        () => ElevatedButton(
-                          onPressed: controller.isSaving.value
-                              ? null
-                              : () {
-                                  if (_providerForm.currentState?.validate() ??
-                                      false) {
-                                    controller.submitProvider(
-                                      businessName: _business.text.trim(),
-                                      description: _description.text.trim(),
-                                    );
-                                  }
-                                },
-                          child: controller.isSaving.value
-                              ? const SizedBox(
-                                  height: 16,
-                                  width: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text('Submit for approval'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _providerCard(user),
             ],
           ),
         );
@@ -266,17 +177,102 @@ class _ProfileContentState extends State<_ProfileContent> {
     );
   }
 
-  Widget _uploadButton(String label, {required VoidCallback onTap}) {
-    return Expanded(
-      child: OutlinedButton.icon(
-        onPressed: onTap,
-        icon: const Icon(Icons.upload),
-        label: Text(label),
-        style: OutlinedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+  Widget _providerCard(AppUser? user) {
+    final status = user?.providerStatus ?? 'none';
+    final isProvider = user?.role == 'provider' || status == 'approved';
+    final isSubmitted = status == 'pending' || isProvider;
+    Color chipColor;
+    String chipText;
+    switch (status) {
+      case 'pending':
+        chipColor = Colors.orange;
+        chipText = 'Pending review';
+        break;
+      case 'approved':
+        chipColor = Colors.green;
+        chipText = 'Approved provider';
+        break;
+      case 'rejected':
+        chipColor = Colors.red;
+        chipText = 'Rejected';
+        break;
+      default:
+        chipColor = AppColors.textSecondary;
+        chipText = 'Not submitted';
+    }
+
+    return _glassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Provider account',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: chipColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Text(
+                  chipText,
+                  style: TextStyle(
+                    color: chipColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
+          const SizedBox(height: 8),
+          Text(
+            isProvider
+                ? 'Your provider account is active. Publish and manage services.'
+                : status == 'pending'
+                ? 'We are reviewing your documents. You will be notified once approved.'
+                : 'Submit your CNIC to become a verified provider.',
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: isSubmitted
+                      ? null
+                      : () => Get.toNamed(Routes.providerRequest),
+                  child: Text(
+                    isProvider
+                        ? 'Approved'
+                        : isSubmitted
+                        ? 'Submitted'
+                        : 'Become a provider',
+                  ),
+                ),
+              ),
+              if (isSubmitted)
+                TextButton(
+                  onPressed: () => Get.toNamed(Routes.providerRequest),
+                  child: const Text('View request'),
+                ),
+            ],
+          ),
+          if (isProvider)
+            TextButton.icon(
+              onPressed: () {
+                final shell = Get.find<ShellController>();
+                shell.changeTab(3);
+              },
+              icon: const Icon(Icons.store_mall_directory),
+              label: const Text('Go to Services'),
+            ),
+        ],
       ),
     );
   }

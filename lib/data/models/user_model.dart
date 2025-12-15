@@ -11,6 +11,7 @@ class AppUser extends Equatable {
   final String? fcmToken;
   final bool isProvider;
   final String providerStatus; // pending | approved | rejected | none
+  final String role; // user | provider | admin
 
   const AppUser({
     required this.id,
@@ -23,6 +24,7 @@ class AppUser extends Equatable {
     this.fcmToken,
     this.isProvider = false,
     this.providerStatus = 'none',
+    this.role = 'user',
   });
 
   factory AppUser.empty() => const AppUser(id: '', email: '');
@@ -36,6 +38,7 @@ class AppUser extends Equatable {
     String? fcmToken,
     bool? isProvider,
     String? providerStatus,
+    String? role,
   }) {
     return AppUser(
       id: id,
@@ -48,6 +51,7 @@ class AppUser extends Equatable {
       fcmToken: fcmToken ?? this.fcmToken,
       isProvider: isProvider ?? this.isProvider,
       providerStatus: providerStatus ?? this.providerStatus,
+      role: role ?? this.role,
     );
   }
 
@@ -62,6 +66,7 @@ class AppUser extends Equatable {
       'fcmToken': fcmToken,
       'isProvider': isProvider,
       'providerStatus': providerStatus,
+      'role': role,
     };
   }
 
@@ -77,6 +82,7 @@ class AppUser extends Equatable {
       fcmToken: map['fcmToken'],
       isProvider: map['isProvider'] ?? false,
       providerStatus: map['providerStatus'] ?? 'none',
+      role: map['role'] ?? 'user',
     );
   }
 
@@ -92,5 +98,6 @@ class AppUser extends Equatable {
     fcmToken,
     isProvider,
     providerStatus,
+    role,
   ];
 }

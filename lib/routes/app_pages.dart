@@ -13,6 +13,8 @@ import '../modules/chat/bindings/chat_binding.dart';
 import '../modules/chat/views/chat_room_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
+import '../modules/provider_request/bindings/provider_request_binding.dart';
+import '../modules/provider_request/views/provider_request_view.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -66,6 +68,11 @@ class AppPages {
       name: Routes.profile,
       page: () => const ProfileView(),
       binding: ProfileBinding(),
+    ),
+    GetPage(
+      name: Routes.providerRequest,
+      page: () => const ProviderRequestView(),
+      binding: ProviderRequestBinding(),
     ),
   ];
 }
