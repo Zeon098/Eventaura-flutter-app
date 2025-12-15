@@ -32,7 +32,11 @@ class _ServiceExploreViewState extends State<ServiceExploreView> {
   void initState() {
     super.initState();
     serviceController = Get.put(
-      ServiceController(serviceRepository: Get.find()),
+      ServiceController(
+        serviceRepository: Get.find(),
+        locationService: Get.find(),
+        userStore: Get.find(),
+      ),
     );
     searchController = Get.put(AlgoliaSearchController());
     serviceController.bindAllServices();

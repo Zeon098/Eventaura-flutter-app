@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/service_model.dart';
@@ -50,7 +51,6 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
     final shell = Get.find<ShellController>();
     final userStore = Get.find<UserStore>();
     final gallery = service.galleryImages.take(5).toList();
-    final mapUrl = _buildMapUrl(service.latitude, service.longitude);
 
     return Scaffold(
       appBar: AppBar(title: Text(service.title)),
@@ -75,7 +75,7 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
                 const SizedBox(height: 20),
                 _providerSection(),
                 const SizedBox(height: 20),
-                _locationSection(mapUrl),
+                _locationSection(),
                 const SizedBox(height: 28),
                 Obx(
                   () => ElevatedButton.icon(
@@ -250,7 +250,7 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
     );
   }
 
-  Widget _locationSection(String? mapUrl) {
+  Widget _locationSection() {
     return _SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,18 +266,29 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
             ],
           ),
           const SizedBox(height: 12),
-          if (mapUrl != null)
+          if (service.latitude != null && service.longitude != null)
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: CachedNetworkImage(
-                imageUrl: mapUrl,
-                height: 180,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                placeholder: (_, __) =>
-                    Container(height: 180, color: Colors.grey.shade200),
-                errorWidget: (_, __, ___) =>
-                    Container(height: 180, color: Colors.grey.shade300),
+              child: SizedBox(
+                height: 200,
+                child: GoogleMap(
+                  liteModeEnabled: true,
+                  zoomControlsEnabled: false,
+                  myLocationButtonEnabled: false,
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(service.latitude!, service.longitude!),
+                    zoom: 14,
+                  ),
+                  markers: {
+                    Marker(
+                      markerId: MarkerId(service.id),
+                      position: LatLng(service.latitude!, service.longitude!),
+                      infoWindow: InfoWindow(title: service.title),
+                    ),
+                  },
+                  onTap: (_) =>
+                      _openMaps(service.latitude!, service.longitude!),
+                ),
               ),
             )
           else
@@ -304,12 +315,6 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
         ],
       ),
     );
-  }
-
-  String? _buildMapUrl(double? lat, double? lng) {
-    if (lat == null || lng == null) return null;
-    final center = '${lat.toStringAsFixed(6)},${lng.toStringAsFixed(6)}';
-    return 'https://staticmap.openstreetmap.de/staticmap.php?center=$center&zoom=14&size=600x300&markers=$center,red-pushpin';
   }
 
   Future<void> _openMaps(double lat, double lng) async {

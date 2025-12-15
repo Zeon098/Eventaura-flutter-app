@@ -6,16 +6,27 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import '../../../data/models/service_model.dart';
 import '../../../data/repositories/service_repository.dart';
+import '../../../core/services/location_service.dart';
+import '../../../core/stores/user_store.dart';
 
 class ServiceController extends GetxController {
-  ServiceController({required this.serviceRepository});
+  ServiceController({
+    required this.serviceRepository,
+    required this.locationService,
+    required this.userStore,
+  });
 
   final ServiceRepository serviceRepository;
+  final LocationService locationService;
+  final UserStore userStore;
   final services = <ServiceModel>[].obs;
   final isLoading = false.obs;
   final picker = ImagePicker();
   File? cover;
   final gallery = <File>[];
+  final Rxn<double> latitude = Rxn<double>();
+  final Rxn<double> longitude = Rxn<double>();
+  final locationLabel = ''.obs;
   StreamSubscription<List<ServiceModel>>? _allSub;
   StreamSubscription<List<ServiceModel>>? _providerSub;
 
@@ -72,7 +83,7 @@ class ServiceController extends GetxController {
     required String category,
     required double price,
     required String description,
-    required String location,
+    required String location, // Removed duplicate parameter
     double? latitude,
     double? longitude,
   }) async {
@@ -91,8 +102,9 @@ class ServiceController extends GetxController {
         location: location,
         cover: cover!,
         gallery: gallery,
-        latitude: latitude,
-        longitude: longitude,
+        latitude: latitude ?? this.latitude.value ?? userStore.value?.latitude,
+        longitude:
+            longitude ?? this.longitude.value ?? userStore.value?.longitude,
       );
       SnackbarUtils.success('Created', 'Service published');
     } catch (e) {
@@ -135,5 +147,26 @@ class ServiceController extends GetxController {
     cover = null;
     gallery.clear();
     update();
+  }
+
+  Future<void> fetchCurrentLocation() async {
+    try {
+      isLoading.value = true;
+      final position = await locationService.getCurrentPosition();
+      latitude.value = position.latitude;
+      longitude.value = position.longitude;
+      final city = await locationService.reverseGeocodeCity(
+        position.latitude,
+        position.longitude,
+      );
+      if (city != null) locationLabel.value = city;
+      update();
+    } on PermissionDeniedException catch (e) {
+      SnackbarUtils.error('Location', e.message);
+    } catch (e) {
+      SnackbarUtils.error('Location', e.toString());
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

@@ -42,7 +42,9 @@ class EventauraApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Eventaura',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       initialRoute: AppPages.initial,
       initialBinding: GlobalBinding(),
       getPages: AppPages.routes,

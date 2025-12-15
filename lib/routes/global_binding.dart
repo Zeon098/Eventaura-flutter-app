@@ -3,6 +3,7 @@ import '../core/services/algolia_service.dart';
 import '../core/services/cloudinary_service.dart';
 import '../core/services/firebase/push_notification_service.dart';
 import '../core/services/notification_service.dart';
+import '../core/services/location_service.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/booking_repository.dart';
 import '../data/repositories/chat_repository.dart';
@@ -16,6 +17,7 @@ class GlobalBinding extends Bindings {
   void dependencies() {
     Get.put<AuthRepository>(AuthRepository(), permanent: true);
     Get.put<UserRepository>(UserRepository(), permanent: true);
+    Get.put<LocationService>(LocationService(), permanent: true);
     Get.put<ProviderRequestRepository>(
       ProviderRequestRepository(),
       permanent: true,

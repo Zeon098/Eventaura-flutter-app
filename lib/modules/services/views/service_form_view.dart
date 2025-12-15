@@ -23,6 +23,9 @@ class _ServiceFormViewState extends State<ServiceFormView> {
   Widget build(BuildContext context) {
     final controller = Get.find<ServiceController>();
     final shell = Get.find<ShellController>();
+    _location.text = _location.text.isEmpty
+        ? (shell.user.value?.city ?? controller.locationLabel.value)
+        : _location.text;
     return Scaffold(
       appBar: AppBar(title: const Text('Add service')),
       body: SingleChildScrollView(
@@ -54,6 +57,33 @@ class _ServiceFormViewState extends State<ServiceFormView> {
                 controller: _location,
                 decoration: const InputDecoration(labelText: 'Location'),
                 validator: Validators.notEmpty,
+              ),
+              const SizedBox(height: 8),
+              Obx(
+                () => Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        controller.locationLabel.isNotEmpty
+                            ? 'Using: ${controller.locationLabel.value}'
+                            : 'Use your current location for better search',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: controller.isLoading.value
+                          ? null
+                          : () async {
+                              await controller.fetchCurrentLocation();
+                              if (controller.locationLabel.isNotEmpty) {
+                                _location.text = controller.locationLabel.value;
+                              }
+                            },
+                      icon: const Icon(Icons.my_location, size: 18),
+                      label: const Text('Use current'),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -95,6 +125,8 @@ class _ServiceFormViewState extends State<ServiceFormView> {
                               price: price,
                               description: _description.text.trim(),
                               location: _location.text.trim(),
+                              latitude: controller.latitude.value,
+                              longitude: controller.longitude.value,
                             );
                           }
                         },
