@@ -25,24 +25,21 @@ class ShellView extends GetView<ShellController> {
         const HomeView(),
         const ChatListView(),
         const BookingListView(),
-        if (isProvider)
-          const ProviderServicesView()
-        else
-          const ServiceExploreView(),
+        if (isProvider) const ProviderServicesView(),
         const ProfileView(),
       ];
       final labels = <String>[
         'Home',
         'Chat',
         'Bookings',
-        'Services',
+        if (isProvider) 'Your Services',
         'Profile',
       ];
       final icons = <IconData>[
         Icons.home_filled,
         Icons.chat_bubble_rounded,
         Icons.event_available,
-        Icons.store_mall_directory,
+        if (isProvider) Icons.store_mall_directory,
         Icons.person,
       ];
       return Scaffold(

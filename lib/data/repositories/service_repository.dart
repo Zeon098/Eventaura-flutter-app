@@ -109,6 +109,35 @@ class ServiceRepository {
     } catch (_) {}
   }
 
+  Future<List<ServiceModel>> fetchTrending({int limit = 10}) async {
+    final index = _algolia.serviceIndex();
+    final response = await index.query('').setHitsPerPage(limit).getObjects();
+    return response.hits.map((hit) => _fromHit(hit.data)).toList();
+  }
+
+  Future<List<ServiceModel>> fetchNearby({
+    required double latitude,
+    required double longitude,
+    int limit = 20,
+    double? radiusKm,
+  }) async {
+    var query = _algolia
+        .serviceIndex()
+        .query('')
+        .setAroundLatLng('$latitude,$longitude')
+        .setHitsPerPage(limit);
+
+    if (radiusKm != null) {
+      query = query.setAroundRadius((radiusKm * 1000).round());
+    }
+
+    final response = await query.getObjects();
+    return response.hits
+        .map((hit) => _fromHit(hit.data))
+        .where((s) => s.latitude != null && s.longitude != null)
+        .toList();
+  }
+
   Future<List<ServiceModel>> fetchProviderServices(String providerId) async {
     final snap = await _firestore
         .collection(AppConstants.servicesCollection)
@@ -170,5 +199,27 @@ class ServiceRepository {
     }
 
     await _algolia.serviceIndex(admin: true).addObject(payload);
+  }
+
+  ServiceModel _fromHit(Map<String, dynamic> hit) {
+    final geo = hit['_geoloc'];
+    return ServiceModel(
+      id: hit['objectID'] ?? '',
+      providerId: hit['providerId'] ?? '',
+      title: hit['title'] ?? '',
+      category: hit['category'] ?? '',
+      price: (hit['price'] as num?)?.toDouble() ?? 0,
+      description: hit['description'] ?? '',
+      location: hit['location'] ?? '',
+      latitude: (geo is Map && geo['lat'] is num)
+          ? (geo['lat'] as num).toDouble()
+          : null,
+      longitude: (geo is Map && geo['lng'] is num)
+          ? (geo['lng'] as num).toDouble()
+          : null,
+      coverImage: hit['cover_image'] ?? '',
+      galleryImages: List<String>.from(hit['gallery_images'] ?? const []),
+      rating: (hit['rating'] as num?)?.toDouble() ?? 0,
+    );
   }
 }
