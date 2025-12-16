@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/stores/user_store.dart';
@@ -29,18 +30,74 @@ class BookingController extends GetxController {
   Stream<List<BookingModel>> watchProvider(String providerId) =>
       bookingRepository.watchProviderBookings(providerId);
 
+  Stream<List<BookingModel>> consumerRequests(String userId) =>
+      bookingRepository.watchUserBookingsByStatus(userId, [
+        BookingModel.pending,
+      ]);
+
+  Stream<List<BookingModel>> consumerUpcoming(String userId) =>
+      bookingRepository.watchUserBookingsByStatus(userId, [
+        BookingModel.accepted,
+      ]);
+
+  Stream<List<BookingModel>> consumerHistory(String userId) =>
+      bookingRepository.watchUserBookingsByStatus(userId, [
+        BookingModel.rejected,
+        BookingModel.completed,
+        BookingModel.cancelled,
+      ]);
+
+  Stream<List<BookingModel>> providerRequests(String providerId) =>
+      bookingRepository.watchProviderBookingsByStatus(providerId, [
+        BookingModel.pending,
+      ]);
+
+  Stream<List<BookingModel>> providerUpcoming(String providerId) =>
+      bookingRepository.watchProviderBookingsByStatus(providerId, [
+        BookingModel.accepted,
+      ]);
+
+  Stream<List<BookingModel>> providerHistory(String providerId) =>
+      bookingRepository.watchProviderBookingsByStatus(providerId, [
+        BookingModel.rejected,
+        BookingModel.completed,
+        BookingModel.cancelled,
+      ]);
+
   Future<BookingModel?> createBooking({
     required String serviceId,
     required String consumerId,
     required String providerId,
+    required DateTime date,
+    required DateTime startTime,
+    required DateTime endTime,
     String? serviceTitle,
   }) async {
     try {
       isLoading.value = true;
+      if (!startTime.isBefore(endTime)) {
+        SnackbarUtils.error('Booking failed', 'End time must be after start');
+        return null;
+      }
+
+      final hasClash = await bookingRepository.hasOverlap(
+        providerId: providerId,
+        date: date,
+        startTime: startTime,
+        endTime: endTime,
+      );
+      if (hasClash) {
+        SnackbarUtils.error('Booking failed', 'Provider is already booked.');
+        return null;
+      }
+
       final booking = await bookingRepository.createBooking(
         serviceId: serviceId,
         consumerId: consumerId,
         providerId: providerId,
+        date: date,
+        startTime: startTime,
+        endTime: endTime,
       );
       await chatRepository.ensureRoom(booking.id, [consumerId, providerId]);
       final consumerName = userStore.value?.displayName;
@@ -54,6 +111,7 @@ class BookingController extends GetxController {
       return booking;
     } catch (e) {
       SnackbarUtils.error('Booking failed', e.toString());
+      debugPrint('Error creating booking: $e');
       return null;
     } finally {
       isLoading.value = false;
@@ -62,12 +120,42 @@ class BookingController extends GetxController {
 
   Future<void> updateStatus(String id, String status) async {
     try {
-      await bookingRepository.updateStatus(id, status);
+      final currentUser = userStore.value;
+      if (currentUser == null) {
+        SnackbarUtils.error('Booking', 'Please sign in again');
+        return;
+      }
       final booking = await bookingRepository.getBooking(id);
-      if (booking != null) {
+      if (booking == null) {
+        SnackbarUtils.error('Booking', 'Booking not found');
+        return;
+      }
+
+      final isProviderOrAdmin =
+          currentUser.role == 'provider' || currentUser.role == 'admin';
+      if (!isProviderOrAdmin) {
+        SnackbarUtils.error('Booking', 'Only providers can update bookings');
+        return;
+      }
+
+      if (booking.isPending &&
+          (status == BookingModel.accepted ||
+              status == BookingModel.rejected)) {
+        await bookingRepository.updateStatus(id, status);
+      } else if (booking.isAccepted && status == BookingModel.completed) {
+        await bookingRepository.updateStatus(id, status);
+      } else if (status == BookingModel.cancelled) {
+        await bookingRepository.updateStatus(id, status);
+      } else {
+        SnackbarUtils.error('Booking', 'Invalid status transition');
+        return;
+      }
+
+      final refreshed = await bookingRepository.getBooking(id);
+      if (refreshed != null) {
         final providerName = userStore.value?.displayName;
         await notificationService.notifyBookingStatusChange(
-          booking: booking,
+          booking: refreshed,
           status: status,
           providerName: providerName,
         );

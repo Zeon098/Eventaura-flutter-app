@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/booking_model.dart';
 import '../controllers/booking_controller.dart';
@@ -12,6 +13,8 @@ class BookingDetailView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<BookingController>();
+    final user = controller.userStore.value;
+    final isProvider = user?.role == 'provider' || user?.isProvider == true;
     return Scaffold(
       appBar: AppBar(title: const Text('Booking detail')),
       body: Padding(
@@ -20,35 +23,27 @@ class BookingDetailView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _row('Booking ID', booking.id),
-            _row('Status', booking.status),
-            _row('Service', booking.serviceId),
-            _row('Provider', booking.providerId),
-            const Spacer(),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.success,
-                    ),
-                    onPressed: () =>
-                        controller.updateStatus(booking.id, 'accepted'),
-                    child: const Text('Accept'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.error,
-                    ),
-                    onPressed: () =>
-                        controller.updateStatus(booking.id, 'rejected'),
-                    child: const Text('Reject'),
-                  ),
-                ),
+                const Text('Status'),
+                Chip(label: Text(booking.status)),
               ],
             ),
+            _row('Service', booking.serviceId),
+            _row('Provider', booking.providerId),
+            _row('Consumer', booking.consumerId),
+            _row(
+              'Date',
+              DateFormat('EEE, MMM d, yyyy').format(booking.startTime),
+            ),
+            _row(
+              'Time',
+              '${DateFormat('h:mm a').format(booking.startTime)} - ${DateFormat('h:mm a').format(booking.endTime)}',
+            ),
+            const Spacer(),
+            if (isProvider)
+              _ActionButtons(booking: booking, controller: controller),
           ],
         ),
       ),
@@ -66,5 +61,54 @@ class BookingDetailView extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _ActionButtons extends StatelessWidget {
+  const _ActionButtons({required this.booking, required this.controller});
+
+  final BookingModel booking;
+  final BookingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final actions = <Widget>[];
+
+    if (booking.isPending) {
+      actions.addAll([
+        Expanded(
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
+            onPressed: () =>
+                controller.updateStatus(booking.id, BookingModel.accepted),
+            child: const Text('Accept'),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () =>
+                controller.updateStatus(booking.id, BookingModel.rejected),
+            child: const Text('Reject'),
+          ),
+        ),
+      ]);
+    } else if (booking.isAccepted) {
+      actions.add(
+        Expanded(
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
+            onPressed: () =>
+                controller.updateStatus(booking.id, BookingModel.completed),
+            child: const Text('Mark Completed'),
+          ),
+        ),
+      );
+    }
+
+    if (actions.isEmpty) return const SizedBox.shrink();
+
+    return Row(children: actions);
   }
 }

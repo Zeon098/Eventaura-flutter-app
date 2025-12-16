@@ -22,6 +22,7 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
   late final ServiceModel service;
   late final Future<AppUser> providerFuture;
   late final BookingController bookingController;
+  _BookingSchedule? _lastSchedule;
 
   @override
   void initState() {
@@ -92,12 +93,18 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
                             final userId =
                                 userStore.value?.id ?? shell.user.value?.id;
                             if (userId == null) return;
+                            final schedule = await _pickSchedule(context);
+                            if (schedule == null) return;
                             await bookingController.createBooking(
                               serviceId: service.id,
                               consumerId: userId,
                               providerId: service.providerId,
+                              date: schedule.date,
+                              startTime: schedule.start,
+                              endTime: schedule.end,
                               serviceTitle: service.title,
                             );
+                            setState(() => _lastSchedule = schedule);
                           },
                     icon: bookingController.isLoading.value
                         ? const SizedBox(
@@ -325,6 +332,63 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
       await launchUrl(googleUri, mode: LaunchMode.externalApplication);
     }
   }
+
+  Future<_BookingSchedule?> _pickSchedule(BuildContext context) async {
+    final now = DateTime.now();
+    final initialDate = _lastSchedule?.date ?? now;
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+    );
+    if (date == null) return null;
+
+    final startInitial =
+        _lastSchedule?.start ?? now.add(const Duration(hours: 1));
+    final startTod = TimeOfDay.fromDateTime(startInitial);
+    final startTime = await showTimePicker(
+      context: context,
+      initialTime: startTod,
+    );
+    if (startTime == null) return null;
+
+    final start = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      startTime.hour,
+      startTime.minute,
+    );
+
+    final endInitial =
+        _lastSchedule?.end ?? start.add(const Duration(hours: 1));
+    final endTod = TimeOfDay.fromDateTime(endInitial);
+    final endTime = await showTimePicker(context: context, initialTime: endTod);
+    if (endTime == null) return null;
+
+    final end = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      endTime.hour,
+      endTime.minute,
+    );
+
+    return _BookingSchedule(date: date, start: start, end: end);
+  }
+}
+
+class _BookingSchedule {
+  const _BookingSchedule({
+    required this.date,
+    required this.start,
+    required this.end,
+  });
+
+  final DateTime date;
+  final DateTime start;
+  final DateTime end;
 }
 
 class _SectionCard extends StatelessWidget {

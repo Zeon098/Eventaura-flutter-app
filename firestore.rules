@@ -14,14 +14,20 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      allow read: if isSignedIn() && (
+      // Allow list queries for overlap checking (authenticated users can query by providerId)
+      allow list: if isSignedIn();
+      // Document reads restricted to participants
+      allow get: if isSignedIn() && (
         request.auth.uid == resource.data.consumerId ||
         request.auth.uid == resource.data.providerId
       );
       allow create: if isSignedIn() &&
         request.resource.data.consumerId == request.auth.uid &&
         request.resource.data.serviceId is string &&
-        request.resource.data.providerId is string;
+        request.resource.data.providerId is string &&
+        request.resource.data.date is string &&
+        request.resource.data.startTime is timestamp &&
+        request.resource.data.endTime is timestamp;
       allow update: if isSignedIn() && (
         request.auth.uid == resource.data.consumerId ||
         request.auth.uid == resource.data.providerId
