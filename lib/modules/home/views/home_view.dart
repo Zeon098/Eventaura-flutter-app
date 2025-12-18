@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/models/service_model.dart';
 import '../../../data/repositories/service_repository.dart';
 import '../../notifications/views/notification_list_view.dart';
+import '../../services/views/service_explore_view.dart';
 import '../../services/views/service_detail_view.dart';
 import '../controllers/home_controller.dart';
 import 'map_view.dart';
@@ -47,6 +48,8 @@ class HomeView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _SearchBar(onTap: () => Get.to(() => const ServiceExploreView())),
+              const SizedBox(height: 16),
               if (user != null && (user.isProvider || user.role == 'provider'))
                 Obx(
                   () => _Section(
@@ -253,6 +256,46 @@ class _ServiceCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchBar extends StatelessWidget {
+  const _SearchBar({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Icon(Icons.search, color: AppColors.textSecondary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Search services',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: AppColors.textSecondary,
+              ),
+            ],
+          ),
         ),
       ),
     );

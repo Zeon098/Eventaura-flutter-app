@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
-import '../../../data/models/booking_model.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../home/controllers/shell_controller.dart';
+import '../components/booking_list_tab.dart';
 import '../controllers/booking_controller.dart';
-import 'booking_detail_view.dart';
 
 class BookingListView extends GetView<BookingController> {
   const BookingListView({super.key});
@@ -23,31 +22,69 @@ class BookingListView extends GetView<BookingController> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
+        backgroundColor: AppColors.surface,
         appBar: AppBar(
-          title: const Text('Bookings'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Requests'),
-              Tab(text: 'Upcoming'),
-              Tab(text: 'History'),
-            ],
+          elevation: 0,
+          backgroundColor: Colors.white,
+          title: Text(
+            'My Bookings',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+            ),
+          ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(60),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: TabBar(
+                indicator: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary, AppColors.primaryDark],
+                  ),
+                ),
+                labelColor: Colors.white,
+                unselectedLabelColor: AppColors.textSecondary,
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: Colors.transparent,
+                tabs: const [
+                  Tab(text: '📋 Requests'),
+                  Tab(text: '🚀 Upcoming'),
+                  Tab(text: '📜 History'),
+                ],
+              ),
+            ),
           ),
         ),
         body: TabBarView(
           children: [
-            _BookingListTab(
+            BookingListTab(
               stream: isProvider
                   ? controller.providerRequests(userId)
                   : controller.consumerRequests(userId),
               isProvider: isProvider,
             ),
-            _BookingListTab(
+            BookingListTab(
               stream: isProvider
                   ? controller.providerUpcoming(userId)
                   : controller.consumerUpcoming(userId),
               isProvider: isProvider,
             ),
-            _BookingListTab(
+            BookingListTab(
               stream: isProvider
                   ? controller.providerHistory(userId)
                   : controller.consumerHistory(userId),
@@ -55,106 +92,6 @@ class BookingListView extends GetView<BookingController> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _BookingListTab extends StatelessWidget {
-  const _BookingListTab({required this.stream, required this.isProvider});
-
-  final Stream<List<BookingModel>> stream;
-  final bool isProvider;
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<List<BookingModel>>(
-      stream: stream,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final bookings = snapshot.data!;
-        if (bookings.isEmpty) {
-          return const Center(child: Text('No bookings'));
-        }
-        return ListView.separated(
-          itemCount: bookings.length,
-          separatorBuilder: (_, __) => const Divider(height: 1),
-          itemBuilder: (_, index) {
-            final booking = bookings[index];
-            return ListTile(
-              title: Text(_titleText(booking)),
-              subtitle: Text(_subtitleText(booking, isProvider)),
-              trailing: _StatusChip(status: booking.status),
-              onTap: () => Get.to(() => BookingDetailView(booking: booking)),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  String _titleText(BookingModel booking) {
-    final date = DateFormat('EEE, MMM d').format(booking.startTime);
-    final range = _timeRange(booking);
-    return '$date · $range';
-  }
-
-  String _subtitleText(BookingModel booking, bool isProvider) {
-    final counterpart = isProvider
-        ? 'Consumer: ${booking.consumerId}'
-        : 'Provider: ${booking.providerId}';
-    return '$counterpart\nStatus: ${booking.status}';
-  }
-
-  String _timeRange(BookingModel booking) {
-    final fmt = DateFormat('h:mm a');
-    return '${fmt.format(booking.startTime)} - ${fmt.format(booking.endTime)}';
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status});
-
-  final String status;
-
-  Color _colorForStatus(BuildContext context) {
-    switch (status) {
-      case BookingModel.accepted:
-        return Colors.green.shade100;
-      case BookingModel.rejected:
-      case BookingModel.cancelled:
-        return Colors.red.shade100;
-      case BookingModel.completed:
-        return Colors.blue.shade100;
-      default:
-        return Theme.of(context).colorScheme.secondaryContainer;
-    }
-  }
-
-  Color _textColor(BuildContext context) {
-    switch (status) {
-      case BookingModel.accepted:
-        return Colors.green.shade800;
-      case BookingModel.rejected:
-      case BookingModel.cancelled:
-        return Colors.red.shade800;
-      case BookingModel.completed:
-        return Colors.blue.shade800;
-      default:
-        return Theme.of(context).colorScheme.onSecondaryContainer;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(
-      label: Text(status),
-      backgroundColor: _colorForStatus(context),
-      labelStyle: TextStyle(
-        color: _textColor(context),
-        fontWeight: FontWeight.w600,
       ),
     );
   }

@@ -5,7 +5,6 @@ import '../../booking/views/booking_list_view.dart';
 import '../../chat/views/chat_list_view.dart';
 import '../../profile/views/profile_view.dart';
 import '../../provider/views/provider_services_view.dart';
-import '../../services/views/service_explore_view.dart';
 import '../controllers/shell_controller.dart';
 import 'home_view.dart';
 
