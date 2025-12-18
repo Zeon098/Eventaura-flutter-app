@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../data/models/booking_model.dart';
 import 'booking_card.dart';
 import 'booking_dialog.dart';
@@ -31,14 +31,14 @@ class BookingListTab extends StatelessWidget {
                 Icon(
                   Icons.event_busy,
                   size: 80,
-                  color: AppColors.textSecondary.withOpacity(0.3),
+                  color: AppTheme.textSecondaryColor.withOpacity(0.3),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No bookings yet',
                   style: TextStyle(
                     fontSize: 18,
-                    color: AppColors.textSecondary,
+                    color: AppTheme.textSecondaryColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

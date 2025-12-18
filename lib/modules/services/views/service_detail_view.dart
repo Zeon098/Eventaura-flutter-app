@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../data/models/service_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/repositories/user_repository.dart';
@@ -81,7 +81,7 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
                 Obx(
                   () => ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppTheme.primaryColor,
                       minimumSize: const Size(double.infinity, 52),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -177,7 +177,7 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
         Text(
           'PKR ${service.price.toStringAsFixed(0)}',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: AppColors.primary,
+            color: AppTheme.primaryColor,
             fontWeight: FontWeight.w700,
           ),
         ),

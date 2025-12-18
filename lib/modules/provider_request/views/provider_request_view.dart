@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/validators.dart';
 import '../../../routes/app_routes.dart';
 import '../../home/controllers/shell_controller.dart';
@@ -179,7 +179,7 @@ class _ProviderRequestViewState extends State<ProviderRequestView> {
         label = 'Rejected';
         break;
       default:
-        color = AppColors.textSecondary;
+        color = AppTheme.textSecondaryColor;
         label = 'Not submitted';
     }
     return Container(
@@ -235,7 +235,7 @@ class _ProviderRequestViewState extends State<ProviderRequestView> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: hasImage ? AppColors.primary : Colors.grey.shade300,
+            color: hasImage ? AppTheme.primaryColor : Colors.grey.shade300,
           ),
           image: hasImage
               ? DecorationImage(
@@ -252,7 +252,7 @@ class _ProviderRequestViewState extends State<ProviderRequestView> {
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.upload_file, color: AppColors.primary),
+                  const Icon(Icons.upload_file, color: AppTheme.primaryColor),
                   const SizedBox(height: 6),
                   Text(label),
                 ],

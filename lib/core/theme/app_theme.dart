@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Colors
-  static const Color primaryColor = Color.fromARGB(255, 84, 76, 229);
-  static const Color secondaryColor = Color.fromARGB(255, 20, 20, 113);
+  // Colors - Main App Colors
+  static const Color primaryColor = Color.fromARGB(255, 229, 100, 64);
+  static const Color secondaryColor = Color.fromARGB(255, 215, 68, 0);
+  static const Color accent = Color(0xFF48BFE3);
   static const Color errorColor = Color(0xFFFF5252);
   static const Color successColor = Color(0xFF4CAF50);
   static const Color warningColor = Color(0xFFFF9800);
   static const Color backgroundColor = Color(0xFFF5F7FA);
   static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color textPrimaryColor = Color(0xFF2C3E50);
-  static const Color textSecondaryColor = Color(0xFF95A5A6);
+  static const Color textSecondaryColor = Color.fromARGB(255, 111, 119, 119);
   static const Color dividerColor = Color(0xFFE0E0E0);
 
   // Gradients

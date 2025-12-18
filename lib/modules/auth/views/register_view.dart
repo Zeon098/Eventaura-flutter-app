@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/validators.dart';
 import '../controllers/auth_controller.dart';
 
@@ -24,7 +24,7 @@ class _RegisterViewState extends State<RegisterView> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppColors.primary, AppColors.accent],
+            colors: [AppTheme.primaryColor, AppTheme.accent],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

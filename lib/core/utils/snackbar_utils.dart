@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 
 class SnackbarUtils {
   SnackbarUtils._();
@@ -8,7 +8,7 @@ class SnackbarUtils {
     Get.snackbar(
       title,
       message,
-      backgroundColor: AppColors.success.withOpacity(0.1),
+      backgroundColor: AppTheme.successColor.withOpacity(0.1),
     );
   }
 
@@ -16,7 +16,7 @@ class SnackbarUtils {
     Get.snackbar(
       title,
       message,
-      backgroundColor: AppColors.error.withOpacity(0.1),
+      backgroundColor: AppTheme.errorColor.withOpacity(0.1),
     );
   }
 }

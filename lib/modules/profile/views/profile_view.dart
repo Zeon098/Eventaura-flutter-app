@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/validators.dart';
 import '../../../data/models/user_model.dart';
 import '../../../routes/app_routes.dart';
@@ -52,7 +52,9 @@ class _ProfileContentState extends State<_ProfileContent> {
                       onTap: controller.pickAvatar,
                       child: CircleAvatar(
                         radius: 36,
-                        backgroundColor: AppColors.primary.withOpacity(0.15),
+                        backgroundColor: AppTheme.primaryColor.withOpacity(
+                          0.15,
+                        ),
                         backgroundImage: controller.avatarFile != null
                             ? FileImage(controller.avatarFile!)
                             : (user?.photoUrl != null
@@ -64,7 +66,7 @@ class _ProfileContentState extends State<_ProfileContent> {
                                 user?.photoUrl == null
                             ? const Icon(
                                 Icons.camera_alt,
-                                color: AppColors.primary,
+                                color: AppTheme.primaryColor,
                               )
                             : null,
                       ),
@@ -197,7 +199,7 @@ class _ProfileContentState extends State<_ProfileContent> {
         chipText = 'Rejected';
         break;
       default:
-        chipColor = AppColors.textSecondary;
+        chipColor = AppTheme.textSecondaryColor;
         chipText = 'Not submitted';
     }
 

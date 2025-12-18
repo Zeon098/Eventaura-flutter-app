@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/stores/user_store.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../data/models/service_model.dart';
 import '../../../data/repositories/service_repository.dart';
 import '../../notifications/views/notification_list_view.dart';
@@ -223,7 +223,7 @@ class _ServiceCard extends StatelessWidget {
                         width: double.infinity,
                         fit: BoxFit.cover,
                       )
-                    : Container(color: AppColors.primary.withOpacity(0.1)),
+                    : Container(color: AppTheme.primaryColor.withOpacity(0.1)),
               ),
             ),
             Padding(
@@ -248,7 +248,7 @@ class _ServiceCard extends StatelessWidget {
                   Text(
                     'PKR ${service.price.toStringAsFixed(0)}',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: AppColors.primary,
+                      color: AppTheme.primaryColor,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -279,20 +279,20 @@ class _SearchBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             children: [
-              Icon(Icons.search, color: AppColors.textSecondary),
+              Icon(Icons.search, color: AppTheme.textSecondaryColor),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Search services',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: AppTheme.textSecondaryColor,
                   ),
                 ),
               ),
               Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
-                color: AppColors.textSecondary,
+                color: AppTheme.textSecondaryColor,
               ),
             ],
           ),

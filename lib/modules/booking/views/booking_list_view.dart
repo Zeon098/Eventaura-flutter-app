@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../home/controllers/shell_controller.dart';
 import '../components/booking_list_tab.dart';
 import '../controllers/booking_controller.dart';
@@ -22,14 +22,14 @@ class BookingListView extends GetView<BookingController> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppTheme.surfaceColor,
         appBar: AppBar(
           elevation: 0,
           backgroundColor: Colors.white,
           title: Text(
             'My Bookings',
             style: TextStyle(
-              color: AppColors.textPrimary,
+              color: AppTheme.textPrimaryColor,
               fontWeight: FontWeight.bold,
               fontSize: 24,
             ),
@@ -39,18 +39,18 @@ class BookingListView extends GetView<BookingController> {
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppTheme.primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: TabBar(
                 indicator: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
                   gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.primaryDark],
+                    colors: [AppTheme.primaryColor, AppTheme.secondaryColor],
                   ),
                 ),
                 labelColor: Colors.white,
-                unselectedLabelColor: AppColors.textSecondary,
+                unselectedLabelColor: AppTheme.textSecondaryColor,
                 labelStyle: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,

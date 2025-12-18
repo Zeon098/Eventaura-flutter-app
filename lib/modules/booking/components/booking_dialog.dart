@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../data/models/booking_model.dart';
 import '../../../data/models/service_model.dart';
 import '../../../data/models/user_model.dart';
@@ -34,7 +34,7 @@ class BookingDialog extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.white, AppColors.surface],
+            colors: [Colors.white, AppTheme.surfaceColor],
           ),
         ),
         child: Column(
@@ -44,7 +44,7 @@ class BookingDialog extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [AppColors.primary, AppColors.primaryDark],
+                  colors: [AppTheme.primaryColor, AppTheme.secondaryColor],
                 ),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(24),
@@ -126,7 +126,7 @@ class BookingDialog extends StatelessWidget {
                     Expanded(
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.success,
+                          backgroundColor: AppTheme.successColor,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
@@ -151,7 +151,7 @@ class BookingDialog extends StatelessWidget {
                     Expanded(
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.error,
+                          backgroundColor: AppTheme.errorColor,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
@@ -182,7 +182,7 @@ class BookingDialog extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppTheme.primaryColor,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(

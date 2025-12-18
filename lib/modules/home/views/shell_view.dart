@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../booking/views/booking_list_view.dart';
 import '../../chat/views/chat_list_view.dart';
 import '../../profile/views/profile_view.dart';
@@ -66,8 +66,8 @@ class ShellView extends GetView<ShellController> {
             currentIndex: controller.tabIndex.value,
             onTap: controller.changeTab,
             type: BottomNavigationBarType.fixed,
-            selectedItemColor: AppColors.primary,
-            unselectedItemColor: AppColors.textSecondary,
+            selectedItemColor: AppTheme.primaryColor,
+            unselectedItemColor: AppTheme.textSecondaryColor,
             items: List.generate(pages.length, (index) {
               return BottomNavigationBarItem(
                 icon: Icon(icons[index]),

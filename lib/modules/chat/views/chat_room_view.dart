@@ -1,11 +1,12 @@
-import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../data/models/user_model.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../data/repositories/user_repository.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../home/controllers/shell_controller.dart';
+import '../components/chat_app_bar.dart';
+import '../components/message_bubble.dart';
+import '../components/message_input.dart';
 import '../controllers/chat_controller.dart';
 
 class ChatRoomView extends StatefulWidget {
@@ -18,19 +19,14 @@ class ChatRoomView extends StatefulWidget {
 }
 
 class _ChatRoomViewState extends State<ChatRoomView> {
-  final _messageCtrl = TextEditingController();
-  Timer? _typingTimer;
-
   @override
   void dispose() {
-    _typingTimer?.cancel();
     final controller = Get.find<ChatController>();
     final shell = Get.find<ShellController>();
     final userId = shell.user.value?.id;
     if (userId != null) {
       controller.setTyping(widget.roomId, userId, false);
     }
-    _messageCtrl.dispose();
     super.dispose();
   }
 
@@ -53,167 +49,82 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: StreamBuilder(
-          stream: controller.room(widget.roomId),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) return const Text('Chat');
-            final room = snapshot.data!;
-            final otherId = room.participantIds.firstWhere(
-              (id) => id != userId,
-              orElse: () => '',
-            );
-            if (otherId.isEmpty) return const Text('Chat');
-            return FutureBuilder<AppUser>(
-              future: userRepo.fetchUser(otherId),
-              builder: (context, snap) {
-                final name = snap.data?.displayName;
-                return Text((name?.isNotEmpty ?? false) ? name! : 'Chat');
-              },
-            );
-          },
-        ),
+      backgroundColor: AppTheme.surfaceColor,
+      appBar: ChatAppBar(
+        roomId: widget.roomId,
+        userId: userId,
+        userRepo: userRepo,
       ),
       body: Column(
         children: [
-          StreamBuilder(
-            stream: controller.room(widget.roomId),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const SizedBox.shrink();
-              final room = snapshot.data!;
-              final someoneTyping = room.typing.entries.any(
-                (entry) => entry.key != userId && entry.value,
-              );
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: someoneTyping ? 32 : 0,
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  someoneTyping ? 'Typing…' : '',
-                  style: const TextStyle(fontStyle: FontStyle.italic),
-                ),
-              );
-            },
-          ),
           Expanded(
             child: StreamBuilder(
               stream: controller.messages(widget.roomId),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
                 final messages = snapshot.data!;
+                if (messages.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          size: 64,
+                          color: AppTheme.textSecondaryColor.withOpacity(0.3),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No messages yet',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: AppTheme.textSecondaryColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Start the conversation',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.textSecondaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
                 return ListView.builder(
                   reverse: true,
+                  padding: const EdgeInsets.all(16),
                   itemCount: messages.length,
                   itemBuilder: (_, index) {
                     final message = messages[messages.length - 1 - index];
                     final isMine = message.senderId == userId;
-                    return Align(
-                      alignment: isMine
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isMine
-                              ? Colors.blueAccent.withOpacity(0.9)
-                              : Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: message.type == 'image'
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  message.content,
-                                  width: 220,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => const SizedBox(
-                                    width: 220,
-                                    height: 160,
-                                    child: Center(
-                                      child: Text('Image unavailable'),
-                                    ),
-                                  ),
-                                ),
-                              )
-                            : Text(
-                                message.content,
-                                style: TextStyle(
-                                  color: isMine ? Colors.white : Colors.black87,
-                                ),
-                              ),
-                      ),
+                    final showTime =
+                        index == 0 ||
+                        (messages.length - 1 - index + 1 < messages.length &&
+                            message.sentAt
+                                    .difference(
+                                      messages[messages.length - 1 - index + 1]
+                                          .sentAt,
+                                    )
+                                    .inMinutes
+                                    .abs() >
+                                5);
+                    return MessageBubble(
+                      message: message,
+                      isMine: isMine,
+                      showTime: showTime,
                     );
                   },
                 );
               },
             ),
           ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _messageCtrl,
-                      onChanged: (_) {
-                        if (userId.isEmpty) return;
-                        controller.setTyping(widget.roomId, userId, true);
-                        _typingTimer?.cancel();
-                        _typingTimer = Timer(const Duration(seconds: 2), () {
-                          controller.setTyping(widget.roomId, userId, false);
-                        });
-                      },
-                      decoration: const InputDecoration(
-                        hintText: 'Message...',
-                        filled: true,
-                      ),
-                    ),
-                  ),
-                  Obx(
-                    () => IconButton(
-                      icon: controller.isUploadingImage.value
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.photo),
-                      onPressed: controller.isUploadingImage.value
-                          ? null
-                          : () => controller.sendImage(
-                              roomId: widget.roomId,
-                              senderId: userId,
-                            ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: () {
-                      final text = _messageCtrl.text.trim();
-                      if (text.isEmpty) return;
-                      controller.sendMessage(
-                        roomId: widget.roomId,
-                        senderId: userId,
-                        content: text,
-                      );
-                      _messageCtrl.clear();
-                      if (userId.isNotEmpty) {
-                        controller.setTyping(widget.roomId, userId, false);
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
+          MessageInput(roomId: widget.roomId, userId: userId),
         ],
       ),
     );

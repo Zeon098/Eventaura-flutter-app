@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 
 class AppTypography {
   AppTypography._();
@@ -9,42 +9,42 @@ class AppTypography {
     displayLarge: GoogleFonts.plusJakartaSans(
       fontSize: 40,
       fontWeight: FontWeight.w700,
-      color: AppColors.textPrimary,
+      color: AppTheme.textPrimaryColor,
     ),
     displayMedium: GoogleFonts.plusJakartaSans(
       fontSize: 32,
       fontWeight: FontWeight.w700,
-      color: AppColors.textPrimary,
+      color: AppTheme.textPrimaryColor,
     ),
     headlineMedium: GoogleFonts.plusJakartaSans(
       fontSize: 24,
       fontWeight: FontWeight.w700,
-      color: AppColors.textPrimary,
+      color: AppTheme.textPrimaryColor,
     ),
     titleLarge: GoogleFonts.plusJakartaSans(
       fontSize: 20,
       fontWeight: FontWeight.w700,
-      color: AppColors.textPrimary,
+      color: AppTheme.textPrimaryColor,
     ),
     titleMedium: GoogleFonts.plusJakartaSans(
       fontSize: 18,
       fontWeight: FontWeight.w600,
-      color: AppColors.textPrimary,
+      color: AppTheme.textPrimaryColor,
     ),
     bodyLarge: GoogleFonts.plusJakartaSans(
       fontSize: 16,
       fontWeight: FontWeight.w500,
-      color: AppColors.textPrimary,
+      color: AppTheme.textPrimaryColor,
     ),
     bodyMedium: GoogleFonts.plusJakartaSans(
       fontSize: 14,
       fontWeight: FontWeight.w400,
-      color: AppColors.textSecondary,
+      color: AppTheme.textPrimaryColor,
     ),
     labelLarge: GoogleFonts.plusJakartaSans(
       fontSize: 14,
       fontWeight: FontWeight.w600,
-      color: AppColors.textPrimary,
+      color: AppTheme.textPrimaryColor,
     ),
   );
 }

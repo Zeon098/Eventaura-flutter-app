@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../data/models/booking_model.dart';
 import '../../../data/models/service_model.dart';
 import '../../../data/models/user_model.dart';
@@ -27,7 +27,7 @@ class BookingCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       child: Material(
         elevation: 2,
-        shadowColor: AppColors.primary.withOpacity(0.2),
+        shadowColor: AppTheme.primaryColor.withOpacity(0.2),
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onTap,
@@ -38,9 +38,9 @@ class BookingCard extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Colors.white, AppColors.surface.withOpacity(0.3)],
+                colors: [Colors.white, AppTheme.surfaceColor.withOpacity(0.3)],
               ),
-              border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+              border: Border.all(color: AppTheme.primaryColor.withOpacity(0.1)),
             ),
             child: Column(
               children: [
@@ -117,7 +117,7 @@ class BookingCard extends StatelessWidget {
                       Icon(
                         Icons.arrow_forward_ios,
                         size: 16,
-                        color: AppColors.textSecondary,
+                        color: AppTheme.textSecondaryColor,
                       ),
                     ],
                   ),
@@ -175,12 +175,15 @@ class _ServiceNameRow extends StatelessWidget {
         final serviceName = snapshot.data?.title ?? 'Loading...';
         return Row(
           children: [
-            Icon(Icons.store, size: 16, color: AppColors.textSecondary),
+            Icon(Icons.store, size: 16, color: AppTheme.textSecondaryColor),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
                 serviceName,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                style: TextStyle(
+                  color: AppTheme.textSecondaryColor,
+                  fontSize: 13,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -210,13 +213,16 @@ class _UserNameRow extends StatelessWidget {
             Icon(
               isProvider ? Icons.person : Icons.business,
               size: 16,
-              color: AppColors.textSecondary,
+              color: AppTheme.textSecondaryColor,
             ),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
                 userName,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                style: TextStyle(
+                  color: AppTheme.textSecondaryColor,
+                  fontSize: 13,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),

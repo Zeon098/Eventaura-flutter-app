@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../data/models/booking_model.dart';
 import '../controllers/booking_controller.dart';
 
@@ -78,7 +78,9 @@ class _ActionButtons extends StatelessWidget {
       actions.addAll([
         Expanded(
           child: ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.successColor,
+            ),
             onPressed: () =>
                 controller.updateStatus(booking.id, BookingModel.accepted),
             child: const Text('Accept'),
@@ -87,7 +89,9 @@ class _ActionButtons extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorColor,
+            ),
             onPressed: () =>
                 controller.updateStatus(booking.id, BookingModel.rejected),
             child: const Text('Reject'),
@@ -98,7 +102,9 @@ class _ActionButtons extends StatelessWidget {
       actions.add(
         Expanded(
           child: ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.successColor,
+            ),
             onPressed: () =>
                 controller.updateStatus(booking.id, BookingModel.completed),
             child: const Text('Mark Completed'),

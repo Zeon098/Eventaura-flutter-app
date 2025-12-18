@@ -67,10 +67,35 @@ class ChatRepository {
         .where('participantIds', arrayContains: userId)
         .orderBy('updatedAt', descending: true)
         .snapshots()
-        .map(
-          (snap) =>
-              snap.docs.map((d) => ChatRoom.fromMap(d.id, d.data())).toList(),
-        );
+        .map((snap) {
+          final rooms = snap.docs
+              .map((d) => ChatRoom.fromMap(d.id, d.data()))
+              .toList();
+
+          // Deduplicate rooms by participants (keep most recent per participant pair)
+          final seenParticipants = <String, ChatRoom>{};
+          final deduplicatedRooms = <ChatRoom>[];
+
+          for (final room in rooms) {
+            final sortedIds = room.participantIds.toList()..sort();
+            final key = sortedIds.join('-');
+
+            debugPrint('🔍 Room ${room.id}: participants=$sortedIds, key=$key');
+
+            if (!seenParticipants.containsKey(key)) {
+              seenParticipants[key] = room;
+              deduplicatedRooms.add(room);
+              debugPrint('  ✅ Added room ${room.id}');
+            } else {
+              debugPrint('  ⏭️  Skipped duplicate room ${room.id}');
+            }
+          }
+
+          debugPrint(
+            '📊 Total rooms: ${rooms.length}, After deduplication: ${deduplicatedRooms.length}',
+          );
+          return deduplicatedRooms;
+        });
   }
 
   Stream<ChatRoom> watchRoom(String roomId) {
