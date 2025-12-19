@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../home/controllers/shell_controller.dart';
 import '../../services/controllers/service_controller.dart';
 import '../../services/views/service_form_view.dart';
+import '../components/service_card.dart';
+import '../components/empty_services_state.dart';
+import '../components/services_loading_state.dart';
 
 class ProviderServicesView extends GetView<ServiceController> {
   const ProviderServicesView({super.key});
@@ -11,39 +15,36 @@ class ProviderServicesView extends GetView<ServiceController> {
   Widget build(BuildContext context) {
     final shell = Get.find<ShellController>();
     controller.bindProviderServices(shell.user.value?.id ?? '');
+
     return Scaffold(
       appBar: AppBar(title: const Text('My services')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Get.to(() => const ServiceFormView()),
-        label: const Text('Add service'),
+        label: const Text(
+          'Add Service',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         icon: const Icon(Icons.add),
+        backgroundColor: AppTheme.primaryColor,
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const ServicesLoadingState();
         }
+
         if (controller.services.isEmpty) {
-          return const Center(child: Text('No services yet'));
+          return const EmptyServicesState();
         }
+
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           itemCount: controller.services.length,
           itemBuilder: (_, index) {
             final service = controller.services[index];
-            return Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              elevation: 2,
-              child: ListTile(
-                title: Text(service.title),
-                subtitle: Text(
-                  '${service.category} • PKR ${service.price.toStringAsFixed(0)}',
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () =>
-                    Get.to(() => const ServiceFormView(), arguments: service),
-              ),
+            return ServiceCard(
+              service: service,
+              onTap: () =>
+                  Get.to(() => const ServiceFormView(), arguments: service),
             );
           },
         );

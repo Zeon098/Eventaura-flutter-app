@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/validators.dart';
+import '../../../data/models/service_model.dart';
 import '../../home/controllers/shell_controller.dart';
 import '../controllers/service_controller.dart';
+import '../components/form/section_title.dart';
+import '../components/form/styled_text_field.dart';
+import '../components/form/category_dropdown.dart';
+import '../components/form/location_helper.dart';
+import '../components/form/media_section.dart';
+import '../components/form/publish_button.dart';
 
 class ServiceFormView extends StatefulWidget {
   const ServiceFormView({super.key});
@@ -14,134 +22,164 @@ class ServiceFormView extends StatefulWidget {
 class _ServiceFormViewState extends State<ServiceFormView> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
-  final _category = TextEditingController();
   final _price = TextEditingController();
   final _description = TextEditingController();
   final _location = TextEditingController();
+  String? _selectedCategory;
+  ServiceModel? _editingService;
+  bool _isEditMode = false;
+
+  final List<Map<String, dynamic>> _categories = [
+    {
+      'label': '🎨 Decoration',
+      'value': 'decoration',
+      'icon': Icons.auto_awesome,
+    },
+    {'label': '🏛️ Venue', 'value': 'venue', 'icon': Icons.location_city},
+    {'label': '🍽️ Food', 'value': 'food', 'icon': Icons.restaurant},
+    {
+      'label': '🍴 Catering',
+      'value': 'catering',
+      'icon': Icons.restaurant_menu,
+    },
+    {'label': '🔒 Security', 'value': 'security', 'icon': Icons.security},
+    {
+      'label': '🚗 Transport',
+      'value': 'transport',
+      'icon': Icons.directions_car,
+    },
+    {
+      'label': '📸 Photography',
+      'value': 'photography',
+      'icon': Icons.camera_alt,
+    },
+    {'label': '🎵 Music & DJ', 'value': 'music', 'icon': Icons.music_note},
+    {'label': '💐 Flowers', 'value': 'flowers', 'icon': Icons.local_florist},
+    {'label': '🎂 Bakery', 'value': 'bakery', 'icon': Icons.cake},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Check if we're editing an existing service
+    if (Get.arguments != null && Get.arguments is ServiceModel) {
+      _editingService = Get.arguments as ServiceModel;
+      _isEditMode = true;
+      _populateFields();
+    }
+  }
+
+  void _populateFields() {
+    if (_editingService != null) {
+      _title.text = _editingService!.title;
+      _price.text = _editingService!.price.toString();
+      _description.text = _editingService!.description;
+      _location.text = _editingService!.location;
+      _selectedCategory = _editingService!.category;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<ServiceController>();
     final shell = Get.find<ShellController>();
-    _location.text = _location.text.isEmpty
-        ? (shell.user.value?.city ?? controller.locationLabel.value)
-        : _location.text;
+
+    if (!_isEditMode && _location.text.isEmpty) {
+      _location.text = shell.user.value?.city ?? controller.locationLabel.value;
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Add service')),
+      backgroundColor: AppTheme.surfaceColor,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: AppTheme.textPrimaryColor),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          _isEditMode ? '✏️ Edit Service' : '✨ Create Service',
+          style: TextStyle(
+            color: AppTheme.textPrimaryColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextFormField(
+              const SectionTitle(title: '📝 Service Details'),
+              const SizedBox(height: 16),
+              StyledTextField(
                 controller: _title,
-                decoration: const InputDecoration(labelText: 'Title'),
+                label: 'Service Title',
+                hint: 'e.g., Premium Wedding Photography',
                 validator: Validators.notEmpty,
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _category,
-                decoration: const InputDecoration(labelText: 'Category'),
-                validator: Validators.notEmpty,
+              const SizedBox(height: 16),
+              CategoryDropdown(
+                selectedCategory: _selectedCategory,
+                categories: _categories,
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCategory = value;
+                  });
+                },
               ),
-              const SizedBox(height: 12),
-              TextFormField(
+              const SizedBox(height: 16),
+              StyledTextField(
                 controller: _price,
-                decoration: const InputDecoration(labelText: 'Price'),
+                label: 'Price (PKR)',
+                hint: 'Enter your service price',
                 keyboardType: TextInputType.number,
                 validator: Validators.notEmpty,
               ),
-              const SizedBox(height: 12),
-              TextFormField(
+              const SizedBox(height: 24),
+              const SectionTitle(title: '📍 Location'),
+              const SizedBox(height: 16),
+              StyledTextField(
                 controller: _location,
-                decoration: const InputDecoration(labelText: 'Location'),
+                label: 'Service Location',
+                hint: 'Where you provide this service',
                 validator: Validators.notEmpty,
               ),
-              const SizedBox(height: 8),
-              Obx(
-                () => Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        controller.locationLabel.isNotEmpty
-                            ? 'Using: ${controller.locationLabel.value}'
-                            : 'Use your current location for better search',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: controller.isLoading.value
-                          ? null
-                          : () async {
-                              await controller.fetchCurrentLocation();
-                              if (controller.locationLabel.isNotEmpty) {
-                                _location.text = controller.locationLabel.value;
-                              }
-                            },
-                      icon: const Icon(Icons.my_location, size: 18),
-                      label: const Text('Use current'),
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(height: 12),
-              TextFormField(
+              LocationHelper(locationController: _location),
+              const SizedBox(height: 24),
+              const SectionTitle(title: '📄 Description'),
+              const SizedBox(height: 16),
+              StyledTextField(
                 controller: _description,
-                decoration: const InputDecoration(labelText: 'Description'),
-                maxLines: 4,
+                label: 'Service Description',
+                hint: 'Tell customers about your service...',
+                maxLines: 5,
                 validator: (v) =>
                     Validators.minLength(v, 10, label: 'Description'),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: controller.pickCover,
-                    icon: const Icon(Icons.image),
-                    label: const Text('Cover'),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    onPressed: controller.pickGallery,
-                    icon: const Icon(Icons.collections),
-                    label: const Text('Gallery'),
-                  ),
-                ],
+              const SizedBox(height: 24),
+              const SectionTitle(title: '🖼️ Media'),
+              const SizedBox(height: 16),
+              MediaSection(
+                coverImageUrl: _editingService?.coverImage,
+                galleryImageUrls: _editingService?.galleryImages ?? [],
+              ),
+              const SizedBox(height: 32),
+              PublishButton(
+                formKey: _formKey,
+                isEditMode: _isEditMode,
+                editingService: _editingService,
+                titleController: _title,
+                priceController: _price,
+                descriptionController: _description,
+                locationController: _location,
+                selectedCategory: _selectedCategory,
               ),
               const SizedBox(height: 20),
-              Obx(
-                () => ElevatedButton(
-                  onPressed: controller.isLoading.value
-                      ? null
-                      : () {
-                          if (_formKey.currentState?.validate() ?? false) {
-                            final price =
-                                double.tryParse(_price.text.trim()) ?? 0;
-                            controller.createService(
-                              providerId: shell.user.value?.id ?? '',
-                              title: _title.text.trim(),
-                              category: _category.text.trim(),
-                              price: price,
-                              description: _description.text.trim(),
-                              location: _location.text.trim(),
-                              latitude: controller.latitude.value,
-                              longitude: controller.longitude.value,
-                            );
-                          }
-                        },
-                  child: controller.isLoading.value
-                      ? const SizedBox(
-                          height: 16,
-                          width: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text('Publish'),
-                ),
-              ),
             ],
           ),
         ),
