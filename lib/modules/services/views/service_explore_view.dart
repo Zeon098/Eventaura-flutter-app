@@ -1,10 +1,16 @@
 import 'dart:async';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/theme/app_theme.dart';
+import '../components/explore/category_chips.dart';
+import '../components/explore/empty_state.dart';
+import '../components/explore/gradient_app_bar.dart';
+import '../components/explore/loading_state.dart';
+import '../components/explore/price_range_filter.dart';
+import '../components/explore/search_bar_widget.dart';
+import '../components/explore/service_card.dart';
 import '../controllers/algolia_search_controller.dart';
 import '../controllers/service_controller.dart';
-import 'service_detail_view.dart';
 
 class ServiceExploreView extends StatefulWidget {
   const ServiceExploreView({super.key});
@@ -74,155 +80,100 @@ class _ServiceExploreViewState extends State<ServiceExploreView> {
     _debounce = Timer(const Duration(milliseconds: 400), _triggerSearch);
   }
 
+  void _onCategorySelected(String category) {
+    setState(() {
+      _selectedCategory = category == 'All' ? '' : category;
+    });
+    _triggerSearch();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Explore Services')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: _queryController,
-                  onChanged: _onQueryChanged,
-                  decoration: InputDecoration(
-                    hintText: 'Search services',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
+      backgroundColor: AppTheme.backgroundColor,
+      body: CustomScrollView(
+        slivers: [
+          const GradientAppBar(),
+          SliverToBoxAdapter(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
                 ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 42,
-                  child: Obx(() {
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 24),
+                  SearchBarWidget(
+                    controller: _queryController,
+                    onChanged: _onQueryChanged,
+                    onClear: () {
+                      setState(() {
+                        _queryController.clear();
+                      });
+                      _triggerSearch();
+                    },
+                    hasText: _queryController.text.isNotEmpty,
+                  ),
+                  const SizedBox(height: 20),
+                  Obx(() {
                     final categories = {
                       'All',
                       ...serviceController.services.map((s) => s.category),
                     }.toList();
-                    return ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: categories.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (_, index) {
-                        final label = categories[index];
-                        final selected =
-                            (label == 'All' && _selectedCategory.isEmpty) ||
-                            (_selectedCategory == label);
-                        return ChoiceChip(
-                          label: Text(label),
-                          selected: selected,
-                          onSelected: (_) {
-                            setState(() {
-                              _selectedCategory = label == 'All' ? '' : label;
-                            });
-                            _triggerSearch();
-                          },
-                        );
-                      },
+                    return CategoryChips(
+                      categories: categories,
+                      selectedCategory: _selectedCategory,
+                      onCategorySelected: _onCategorySelected,
                     );
                   }),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Price range'),
-                    ValueListenableBuilder(
-                      valueListenable: _priceRange,
-                      builder: (_, RangeValues range, __) {
-                        return Text(
-                          'PKR ${range.start.toStringAsFixed(0)} - ${range.end.toStringAsFixed(0)}',
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                ValueListenableBuilder(
-                  valueListenable: _priceRange,
-                  builder: (_, RangeValues range, __) {
-                    return RangeSlider(
-                      values: range,
-                      min: 0,
-                      max: 100000,
-                      divisions: 20,
-                      labels: RangeLabels(
-                        'PKR ${range.start.toStringAsFixed(0)}',
-                        'PKR ${range.end.toStringAsFixed(0)}',
-                      ),
-                      onChanged: (v) {
-                        _priceRange.value = v;
-                        _triggerSearch();
-                      },
-                    );
-                  },
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  PriceRangeFilter(
+                    priceRange: _priceRange,
+                    onChanged: _triggerSearch,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
-          Expanded(
-            child: Obx(() {
+          SliverPadding(
+            padding: const EdgeInsets.all(20),
+            sliver: Obx(() {
               final loading = _isFiltering && searchController.isLoading.value;
               final items = _isFiltering
                   ? searchController.results
                   : serviceController.services;
 
               if (loading) {
-                return const Center(child: CircularProgressIndicator());
+                return const SliverToBoxAdapter(child: LoadingState());
               }
 
               if (items.isEmpty) {
-                return const Center(child: Text('No services found'));
+                return const SliverToBoxAdapter(child: EmptyState());
               }
 
-              return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                itemCount: items.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (_, index) {
-                  final service = items[index];
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 12,
-                          offset: Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: ListTile(
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: CachedNetworkImage(
-                          imageUrl: service.coverImage,
-                          width: 54,
-                          height: 54,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) =>
-                              Container(color: Colors.grey.shade200),
-                          errorWidget: (_, __, ___) =>
-                              Container(color: Colors.grey.shade300),
-                        ),
-                      ),
-                      title: Text(service.title),
-                      subtitle: Text(
-                        '${service.category} • PKR ${service.price.toStringAsFixed(0)}',
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => Get.to(
-                        () => const ServiceDetailView(),
-                        arguments: service,
-                      ),
-                    ),
-                  );
-                },
+              return SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final service = items[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: ServiceCard(service: service),
+                    );
+                  },
+                  childCount: items.length,
+                ),
               );
             }),
           ),
