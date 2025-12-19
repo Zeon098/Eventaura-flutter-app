@@ -3,11 +3,13 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/stores/user_store.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../data/models/service_model.dart';
 import '../../../data/repositories/service_repository.dart';
 import '../../notifications/views/notification_list_view.dart';
 import '../../services/views/service_explore_view.dart';
-import '../../services/views/service_detail_view.dart';
+import '../components/horizontal_services_list.dart';
+import '../components/search_bar_home.dart';
+import '../components/section_header.dart';
+import '../components/welcome_header.dart';
 import '../controllers/home_controller.dart';
 import 'map_view.dart';
 
@@ -29,12 +31,38 @@ class HomeView extends StatelessWidget {
           );
 
     return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text('Discover'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'Discover',
+          style: TextStyle(
+            color: AppTheme.textPrimaryColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () => Get.to(() => const NotificationListView()),
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.notifications_outlined,
+                color: AppTheme.primaryColor,
+              ),
+              onPressed: () => Get.to(() => const NotificationListView()),
+            ),
           ),
         ],
       ),
@@ -42,258 +70,195 @@ class HomeView extends StatelessWidget {
         onRefresh: () async {
           await Future.wait([homeController.loadTrending()]);
         },
+        color: AppTheme.primaryColor,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _SearchBar(onTap: () => Get.to(() => const ServiceExploreView())),
-              const SizedBox(height: 16),
-              if (user != null && (user.isProvider || user.role == 'provider'))
-                Obx(
-                  () => _Section(
-                    title: 'Your Services',
-                    trailing: homeController.myServicesLoading.value
-                        ? const SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : null,
-                    child: Obx(() {
-                      final items = homeController.myServices;
-                      if (items.isEmpty) {
-                        return const Text('You have no services yet.');
-                      }
-                      return _HorizontalServices(services: items);
-                    }),
-                  ),
-                ),
-              _Section(
-                title: 'Trending Services',
-                trailing: Obx(
-                  () => homeController.trendingLoading.value
-                      ? const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-                child: Obx(() {
-                  final items = homeController.trending;
-                  if (items.isEmpty) {
-                    return const Text('No trending services right now.');
-                  }
-                  return _HorizontalServices(services: items);
-                }),
+              const SizedBox(height: 8),
+              // Welcome Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: WelcomeHeader(userName: user?.displayName),
               ),
-              Obx(() {
-                final hasLocation = homeController.hasLocation.value;
-                return _Section(
-                  title: 'Nearby Services',
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
+              const SizedBox(height: 20),
+
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: SearchBarHome(
+                  onTap: () => Get.to(() => const ServiceExploreView()),
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Your Services Section (Provider only)
+              if (user != null && (user.isProvider || user.role == 'provider'))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.map_outlined),
-                        tooltip: 'View on map',
-                        onPressed: hasLocation
-                            ? () {
-                                Get.to(
-                                  () => const MapView(),
-                                  arguments: {
-                                    'services': homeController.nearby.toList(),
-                                    'center':
-                                        homeController.userLatLng ??
-                                        const LatLng(0, 0),
-                                  },
-                                );
-                              }
-                            : null,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Obx(
+                          () => SectionHeader(
+                            title: 'Your Services',
+                            icon: Icons.work_outline_rounded,
+                            trailing: homeController.myServicesLoading.value
+                                ? SizedBox(
+                                    height: 22,
+                                    width: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        AppTheme.primaryColor,
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ),
                       ),
+                      Obx(() {
+                        final items = homeController.myServices;
+                        if (items.isEmpty) {
+                          return const EmptyServicesState(
+                            message: 'You have no services yet.',
+                            icon: Icons.work_off_outlined,
+                          );
+                        }
+                        return HorizontalServicesList(services: items);
+                      }),
                     ],
                   ),
-                  child: Obx(() {
-                    if (homeController.nearbyLoading.value) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    final items = homeController.nearby;
-                    if (items.isEmpty) {
-                      return const Text(
-                        'Location unavailable or no services nearby.',
-                      );
-                    }
-                    return _HorizontalServices(services: items);
-                  }),
+                ),
+
+              // Trending Services Section
+              Padding(
+                padding: const EdgeInsets.only(bottom: 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Obx(
+                        () => SectionHeader(
+                          title: 'Trending Services',
+                          icon: Icons.trending_up_rounded,
+                          trailing: homeController.trendingLoading.value
+                              ? SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppTheme.primaryColor,
+                                    ),
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ),
+                    ),
+                    Obx(() {
+                      final items = homeController.trending;
+                      if (items.isEmpty) {
+                        return const EmptyServicesState(
+                          message: 'No trending services right now.',
+                          icon: Icons.trending_up_rounded,
+                        );
+                      }
+                      return HorizontalServicesList(services: items);
+                    }),
+                  ],
+                ),
+              ),
+
+              // Nearby Services Section
+              Obx(() {
+                final hasLocation = homeController.hasLocation.value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: SectionHeader(
+                          title: 'Nearby Services',
+                          icon: Icons.location_on_rounded,
+                          trailing: Container(
+                            decoration: BoxDecoration(
+                              color: hasLocation
+                                  ? AppTheme.primaryColor
+                                  : AppTheme.dividerColor,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: hasLocation
+                                  ? [
+                                      BoxShadow(
+                                        color: AppTheme.primaryColor
+                                            .withOpacity(0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.map_rounded,
+                                color: hasLocation ? Colors.white : Colors.grey,
+                                size: 20,
+                              ),
+                              tooltip: 'View on map',
+                              onPressed: hasLocation
+                                  ? () {
+                                      Get.to(
+                                        () => const MapView(),
+                                        arguments: {
+                                          'services': homeController.nearby
+                                              .toList(),
+                                          'center':
+                                              homeController.userLatLng ??
+                                              const LatLng(0, 0),
+                                        },
+                                      );
+                                    }
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Obx(() {
+                        if (homeController.nearbyLoading.value) {
+                          return Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 20),
+                            padding: const EdgeInsets.all(40),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppTheme.primaryColor,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        final items = homeController.nearby;
+                        if (items.isEmpty) {
+                          return const EmptyServicesState(
+                            message:
+                                'Location unavailable or no services nearby.',
+                            icon: Icons.location_off_rounded,
+                          );
+                        }
+                        return HorizontalServicesList(services: items);
+                      }),
+                    ],
+                  ),
                 );
               }),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.child, this.trailing});
-
-  final String title;
-  final Widget child;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title, style: Theme.of(context).textTheme.titleLarge),
-              if (trailing != null) trailing!,
-            ],
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _HorizontalServices extends StatelessWidget {
-  const _HorizontalServices({required this.services});
-
-  final List<ServiceModel> services;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 230,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: services.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (_, index) {
-          final service = services[index];
-          return SizedBox(width: 200, child: _ServiceCard(service: service));
-        },
-      ),
-    );
-  }
-}
-
-class _ServiceCard extends StatelessWidget {
-  const _ServiceCard({required this.service});
-
-  final ServiceModel service;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Get.to(() => const ServiceDetailView(), arguments: service),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 12,
-              offset: Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(14),
-                ),
-                child: service.coverImage.isNotEmpty
-                    ? Image.network(
-                        service.coverImage,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      )
-                    : Container(color: AppTheme.primaryColor.withOpacity(0.1)),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    service.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    service.location,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'PKR ${service.price.toStringAsFixed(0)}',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: AppTheme.primaryColor,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SearchBar extends StatelessWidget {
-  const _SearchBar({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              Icon(Icons.search, color: AppTheme.textSecondaryColor),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Search services',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondaryColor,
-                  ),
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: AppTheme.textSecondaryColor,
-              ),
             ],
           ),
         ),
