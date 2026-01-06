@@ -20,12 +20,17 @@ class ChatRepository {
     String bookingId,
     List<String> participants,
   ) async {
+    final normalized = _normalizeParticipants(participants);
+    if (normalized.isEmpty) {
+      throw Exception('Cannot create chat room without participants');
+    }
+
     final ref = _rooms.doc();
     final now = DateTime.now();
     final room = ChatRoom(
       id: ref.id,
       bookingId: bookingId,
-      participantIds: participants,
+      participantIds: normalized,
       lastMessage: '',
       lastMessageType: 'text',
       updatedAt: now,
@@ -33,7 +38,7 @@ class ChatRepository {
     );
     await ref.set({
       'bookingId': bookingId,
-      'participantIds': participants,
+      'participantIds': normalized,
       'lastMessage': '',
       'lastMessageType': 'text',
       'updatedAt': FieldValue.serverTimestamp(),
@@ -46,20 +51,24 @@ class ChatRepository {
     String bookingId,
     List<String> participants,
   ) async {
-    if (participants.isEmpty) return createRoom(bookingId, participants);
-    final primary = participants.first;
+    final normalized = _normalizeParticipants(participants);
+    if (normalized.isEmpty) {
+      throw Exception('Cannot ensure chat room without participants');
+    }
+
+    final primary = normalized.first;
     final snap = await _rooms
         .where('participantIds', arrayContains: primary)
         .get();
 
     for (final doc in snap.docs) {
       final ids = List<String>.from(doc.data()['participantIds'] ?? []);
-      if (_sameParticipants(ids, participants)) {
+      if (_sameParticipants(ids, normalized)) {
         return ChatRoom.fromMap(doc.id, doc.data());
       }
     }
 
-    return createRoom(bookingId, participants);
+    return createRoom(bookingId, normalized);
   }
 
   Stream<List<ChatRoom>> watchRooms(String userId) {
@@ -172,5 +181,15 @@ class ChatRepository {
     final sa = a.toSet();
     final sb = b.toSet();
     return sa.length == sb.length && sa.containsAll(sb);
+  }
+
+  List<String> _normalizeParticipants(List<String> raw) {
+    final cleaned = raw
+        .where((id) => id.trim().isNotEmpty)
+        .map((id) => id.trim())
+        .toSet()
+        .toList();
+    cleaned.sort();
+    return cleaned;
   }
 }

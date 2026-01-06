@@ -1,28 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../../core/theme/app_theme.dart';
 
-class CategoryDropdown extends StatelessWidget {
-  final String? selectedCategory;
+class CategoryMultiSelect extends GetView {
+  final Set<String> selectedCategories;
   final List<Map<String, dynamic>> categories;
-  final Function(String?) onChanged;
+  final ValueChanged<String> onToggle;
+  final String title;
 
-  const CategoryDropdown({
+  const CategoryMultiSelect({
     super.key,
-    required this.selectedCategory,
+    required this.selectedCategories,
     required this.categories,
-    required this.onChanged,
+    required this.onToggle,
+    this.title = 'Service Categories',
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(
-          color: AppTheme.primaryColor.withOpacity(0.2),
-          width: 1,
-        ),
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.primaryColor.withOpacity(0.15)),
         boxShadow: [
           BoxShadow(
             color: AppTheme.primaryColor.withOpacity(0.08),
@@ -31,60 +32,68 @@ class CategoryDropdown extends StatelessWidget {
           ),
         ],
       ),
-      child: DropdownButtonFormField<String>(
-        value: selectedCategory,
-        decoration: InputDecoration(
-          labelText: 'Service Category',
-          hintText: 'Select a category',
-          labelStyle: TextStyle(color: AppTheme.textSecondaryColor),
-          hintStyle: TextStyle(
-            color: AppTheme.textSecondaryColor.withOpacity(0.5),
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 16,
-          ),
-        ),
-        dropdownColor: Colors.white,
-        icon: Icon(Icons.arrow_drop_down, color: AppTheme.primaryColor),
-        items: categories.map((category) {
-          return DropdownMenuItem<String>(
-            value: category['value'],
-            child: Row(
-              children: [
-                const SizedBox(width: 12),
-                Text(
-                  category['label'],
-                  style: TextStyle(
-                    color: AppTheme.textPrimaryColor,
-                    fontSize: 15,
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimaryColor,
                 ),
-              ],
-            ),
-          );
-        }).toList(),
-        onChanged: onChanged,
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Please select a category';
-          }
-          return null;
-        },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: categories.map((category) {
+              final value = category['value'] as String;
+              final label = category['label'] as String;
+
+              final selected = selectedCategories.contains(value);
+              return FilterChip(
+                selected: selected,
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: selected
+                            ? Colors.white
+                            : AppTheme.textPrimaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                selectedColor: AppTheme.primaryColor,
+                backgroundColor: AppTheme.surfaceColor,
+                checkmarkColor: Colors.white,
+                side: BorderSide(
+                  color: selected
+                      ? AppTheme.primaryColor
+                      : AppTheme.dividerColor,
+                ),
+                onSelected: (_) => onToggle(value),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Pick all categories that describe your service',
+            style: TextStyle(fontSize: 12, color: AppTheme.textSecondaryColor),
+          ),
+        ],
       ),
     );
   }

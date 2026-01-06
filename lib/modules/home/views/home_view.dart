@@ -29,6 +29,7 @@ class HomeView extends StatelessWidget {
               userStore: userStore,
             ),
           );
+    // homeController.onInit();
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,

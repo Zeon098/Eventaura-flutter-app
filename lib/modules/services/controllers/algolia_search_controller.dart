@@ -97,7 +97,7 @@ class AlgoliaSearchController extends GetxController {
     if (minPrice != null) filters.add('price >= $minPrice');
     if (maxPrice != null) filters.add('price <= $maxPrice');
     if (category != null && category.isNotEmpty) {
-      filters.add('category:"$category"');
+      filters.add('(categories:"$category" OR category:"$category")');
     }
     if (filters.isNotEmpty) {
       query = query.setFilters(filters.join(' AND '));
@@ -107,11 +107,16 @@ class AlgoliaSearchController extends GetxController {
 
   ServiceModel _fromHit(Map<String, dynamic> hit) {
     final geo = hit['_geoloc'];
+    final categories = hit['categories'];
     return ServiceModel(
       id: hit['objectID'] ?? '',
       providerId: hit['providerId'] ?? '',
       title: hit['title'] ?? '',
-      category: hit['category'] ?? '',
+      categories: categories is Iterable
+          ? List<String>.from(categories)
+          : hit['category'] != null
+          ? [hit['category']]
+          : <String>[],
       price: (hit['price'] as num?)?.toDouble() ?? 0,
       description: hit['description'] ?? '',
       location: hit['location'] ?? '',

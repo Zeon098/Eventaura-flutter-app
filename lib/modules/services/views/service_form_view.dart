@@ -25,7 +25,7 @@ class _ServiceFormViewState extends State<ServiceFormView> {
   final _price = TextEditingController();
   final _description = TextEditingController();
   final _location = TextEditingController();
-  String? _selectedCategory;
+  final Set<String> _selectedCategories = {};
   ServiceModel? _editingService;
   bool _isEditMode = false;
 
@@ -75,7 +75,13 @@ class _ServiceFormViewState extends State<ServiceFormView> {
       _price.text = _editingService!.price.toString();
       _description.text = _editingService!.description;
       _location.text = _editingService!.location;
-      _selectedCategory = _editingService!.category;
+      _selectedCategories
+        ..clear()
+        ..addAll(
+          _editingService!.categories.isNotEmpty
+              ? _editingService!.categories
+              : [_editingService!.category],
+        );
     }
   }
 
@@ -122,12 +128,16 @@ class _ServiceFormViewState extends State<ServiceFormView> {
                 validator: Validators.notEmpty,
               ),
               const SizedBox(height: 16),
-              CategoryDropdown(
-                selectedCategory: _selectedCategory,
+              CategoryMultiSelect(
+                selectedCategories: _selectedCategories,
                 categories: _categories,
-                onChanged: (value) {
+                onToggle: (value) {
                   setState(() {
-                    _selectedCategory = value;
+                    if (_selectedCategories.contains(value)) {
+                      _selectedCategories.remove(value);
+                    } else {
+                      _selectedCategories.add(value);
+                    }
                   });
                 },
               ),
@@ -177,7 +187,7 @@ class _ServiceFormViewState extends State<ServiceFormView> {
                 priceController: _price,
                 descriptionController: _description,
                 locationController: _location,
-                selectedCategory: _selectedCategory,
+                selectedCategories: _selectedCategories.toList(),
               ),
               const SizedBox(height: 20),
             ],

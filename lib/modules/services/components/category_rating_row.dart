@@ -9,40 +9,58 @@ class CategoryRatingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final categories = service.categories.isNotEmpty
+        ? service.categories
+        : (service.category.isNotEmpty ? [service.category] : const <String>[]);
+
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppTheme.accent.withOpacity(0.2),
-                AppTheme.primaryColor.withOpacity(0.1),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppTheme.accent.withOpacity(0.3),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.category, size: 16, color: AppTheme.accent),
-              const SizedBox(width: 6),
-              Text(
-                service.category.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
+        Expanded(
+          child: Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: categories
+                .map(
+                  (c) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppTheme.accent.withOpacity(0.2),
+                          AppTheme.primaryColor.withOpacity(0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppTheme.accent.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.category, size: 16, color: AppTheme.accent),
+                        const SizedBox(width: 6),
+                        Text(
+                          c.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryColor,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(

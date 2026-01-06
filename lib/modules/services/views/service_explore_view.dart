@@ -129,7 +129,11 @@ class _ServiceExploreViewState extends State<ServiceExploreView> {
                   Obx(() {
                     final categories = {
                       'All',
-                      ...serviceController.services.map((s) => s.category),
+                      ...serviceController.services.expand(
+                        (s) => s.categories.isNotEmpty
+                            ? s.categories
+                            : [s.category],
+                      ),
                     }.toList();
                     return CategoryChips(
                       categories: categories,
@@ -164,16 +168,13 @@ class _ServiceExploreViewState extends State<ServiceExploreView> {
               }
 
               return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final service = items[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: ServiceCard(service: service),
-                    );
-                  },
-                  childCount: items.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final service = items[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: ServiceCard(service: service),
+                  );
+                }, childCount: items.length),
               );
             }),
           ),

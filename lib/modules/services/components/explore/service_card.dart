@@ -208,23 +208,13 @@ class ServiceCard extends StatelessWidget {
           width: 1.5,
         ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.attach_money_rounded,
-            color: AppTheme.primaryColor,
-            size: 18,
-          ),
-          Text(
-            'PKR ${service.price.toStringAsFixed(0)}',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.primaryColor,
-            ),
-          ),
-        ],
+      child: Text(
+        'PKR ${service.price.toStringAsFixed(0)}',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: AppTheme.primaryColor,
+        ),
       ),
     );
   }

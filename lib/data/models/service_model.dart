@@ -4,7 +4,7 @@ class ServiceModel extends Equatable {
   final String id;
   final String providerId;
   final String title;
-  final String category;
+  final List<String> categories;
   final double price;
   final String description;
   final String location;
@@ -18,7 +18,7 @@ class ServiceModel extends Equatable {
     required this.id,
     required this.providerId,
     required this.title,
-    required this.category,
+    required this.categories,
     required this.price,
     required this.description,
     required this.location,
@@ -29,9 +29,12 @@ class ServiceModel extends Equatable {
     this.rating = 0,
   });
 
+  String get primaryCategory => categories.isNotEmpty ? categories.first : '';
+  String get category => primaryCategory; // Backward compatibility
+
   ServiceModel copyWith({
     String? title,
-    String? category,
+    List<String>? categories,
     double? price,
     String? description,
     String? location,
@@ -45,7 +48,7 @@ class ServiceModel extends Equatable {
       id: id,
       providerId: providerId,
       title: title ?? this.title,
-      category: category ?? this.category,
+      categories: categories ?? this.categories,
       price: price ?? this.price,
       description: description ?? this.description,
       location: location ?? this.location,
@@ -61,7 +64,8 @@ class ServiceModel extends Equatable {
     return {
       'providerId': providerId,
       'title': title,
-      'category': category,
+      'categories': categories,
+      'category': primaryCategory, // keep legacy field
       'price': price,
       'description': description,
       'location': location,
@@ -74,11 +78,18 @@ class ServiceModel extends Equatable {
   }
 
   factory ServiceModel.fromMap(String id, Map<String, dynamic> map) {
+    final mappedCategories = map['categories'];
+    final categoryList = mappedCategories is Iterable
+        ? List<String>.from(mappedCategories)
+        : map['category'] != null
+        ? [map['category'].toString()]
+        : <String>[];
+
     return ServiceModel(
       id: id,
       providerId: map['providerId'],
       title: map['title'],
-      category: map['category'],
+      categories: categoryList,
       price: (map['price'] as num?)?.toDouble() ?? 0,
       description: map['description'],
       location: map['location'],
@@ -95,7 +106,7 @@ class ServiceModel extends Equatable {
     id,
     providerId,
     title,
-    category,
+    categories,
     price,
     description,
     location,

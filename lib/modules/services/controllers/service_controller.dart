@@ -80,10 +80,10 @@ class ServiceController extends GetxController {
   Future<void> createService({
     required String providerId,
     required String title,
-    required String category,
+    required List<String> categories,
     required double price,
     required String description,
-    required String location, // Removed duplicate parameter
+    required String location,
     double? latitude,
     double? longitude,
   }) async {
@@ -91,12 +91,16 @@ class ServiceController extends GetxController {
       SnackbarUtils.error('Missing cover', 'Upload a cover image');
       return;
     }
+    if (categories.isEmpty) {
+      SnackbarUtils.error('Category required', 'Select at least one category');
+      return;
+    }
     try {
       isLoading.value = true;
       await serviceRepository.createService(
         providerId: providerId,
         title: title,
-        category: category,
+        categories: categories,
         price: price,
         description: description,
         location: location,

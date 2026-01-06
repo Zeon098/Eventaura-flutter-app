@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../home/controllers/shell_controller.dart';
 import '../../../../data/models/service_model.dart';
 import '../../controllers/service_controller.dart';
@@ -13,7 +14,7 @@ class PublishButton extends StatelessWidget {
   final TextEditingController priceController;
   final TextEditingController descriptionController;
   final TextEditingController locationController;
-  final String? selectedCategory;
+  final List<String> selectedCategories;
 
   const PublishButton({
     super.key,
@@ -24,7 +25,7 @@ class PublishButton extends StatelessWidget {
     required this.priceController,
     required this.descriptionController,
     required this.locationController,
-    required this.selectedCategory,
+    required this.selectedCategories,
   });
 
   @override
@@ -60,11 +61,19 @@ class PublishButton extends StatelessWidget {
                       final price =
                           double.tryParse(priceController.text.trim()) ?? 0;
 
+                      if (selectedCategories.isEmpty) {
+                        SnackbarUtils.error(
+                          'Category required',
+                          'Select at least one category',
+                        );
+                        return;
+                      }
+
                       if (isEditMode && editingService != null) {
                         // Update existing service
                         final updatedService = editingService!.copyWith(
                           title: titleController.text.trim(),
-                          category: selectedCategory ?? '',
+                          categories: selectedCategories,
                           price: price,
                           description: descriptionController.text.trim(),
                           location: locationController.text.trim(),
@@ -77,7 +86,7 @@ class PublishButton extends StatelessWidget {
                         controller.createService(
                           providerId: shell.user.value?.id ?? '',
                           title: titleController.text.trim(),
-                          category: selectedCategory ?? '',
+                          categories: selectedCategories,
                           price: price,
                           description: descriptionController.text.trim(),
                           location: locationController.text.trim(),

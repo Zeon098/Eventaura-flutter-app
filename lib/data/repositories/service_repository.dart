@@ -23,7 +23,7 @@ class ServiceRepository {
   Future<ServiceModel> createService({
     required String providerId,
     required String title,
-    required String category,
+    required List<String> categories,
     required double price,
     required String description,
     required String location,
@@ -47,7 +47,7 @@ class ServiceRepository {
       id: id,
       providerId: providerId,
       title: title,
-      category: category,
+      categories: categories,
       price: price,
       description: description,
       location: location,
@@ -185,7 +185,8 @@ class ServiceRepository {
       'providerId': service.providerId,
       'title': service.title,
       'description': service.description,
-      'category': service.category,
+      'categories': service.categories,
+      'category': service.primaryCategory,
       'price': service.price,
       'rating': service.rating,
       'location': service.location,
@@ -203,11 +204,16 @@ class ServiceRepository {
 
   ServiceModel _fromHit(Map<String, dynamic> hit) {
     final geo = hit['_geoloc'];
+    final categories = hit['categories'];
     return ServiceModel(
       id: hit['objectID'] ?? '',
       providerId: hit['providerId'] ?? '',
       title: hit['title'] ?? '',
-      category: hit['category'] ?? '',
+      categories: categories is Iterable
+          ? List<String>.from(categories)
+          : hit['category'] != null
+          ? [hit['category']]
+          : <String>[],
       price: (hit['price'] as num?)?.toDouble() ?? 0,
       description: hit['description'] ?? '',
       location: hit['location'] ?? '',
