@@ -31,7 +31,7 @@ class ShellView extends GetView<ShellController> {
         'Home',
         'Chat',
         'Bookings',
-        if (isProvider) 'Your Services',
+        if (isProvider) 'Services',
         'Profile',
       ];
       final icons = <IconData>[

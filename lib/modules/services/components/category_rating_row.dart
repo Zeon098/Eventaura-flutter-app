@@ -23,32 +23,24 @@ class CategoryRatingRow extends StatelessWidget {
                 .map(
                   (c) => Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
+                      horizontal: 8,
+                      vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppTheme.accent.withOpacity(0.2),
-                          AppTheme.primaryColor.withOpacity(0.1),
-                        ],
-                      ),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: AppTheme.accent.withOpacity(0.3),
+                        color: AppTheme.primaryColor.withOpacity(0.3),
                         width: 1,
                       ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.category, size: 16, color: AppTheme.accent),
-                        const SizedBox(width: 6),
                         Text(
                           c.toUpperCase(),
                           style: TextStyle(
                             fontSize: 13,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w500,
                             color: AppTheme.primaryColor,
                             letterSpacing: 0.5,
                           ),
