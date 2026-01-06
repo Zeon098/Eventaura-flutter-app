@@ -31,12 +31,12 @@ class AppPages {
     ),
     GetPage(
       name: Routes.login,
-      page: () => const LoginView(),
+      page: () => LoginView(),
       binding: AuthBinding(),
     ),
     GetPage(
       name: Routes.register,
-      page: () => const RegisterView(),
+      page: () => RegisterView(),
       binding: AuthBinding(),
     ),
     GetPage(

@@ -23,8 +23,7 @@ class ServiceRepository {
   Future<ServiceModel> createService({
     required String providerId,
     required String title,
-    required List<String> categories,
-    required double price,
+    required List<ServiceCategory> categories,
     required String description,
     required String location,
     required File cover,
@@ -48,7 +47,6 @@ class ServiceRepository {
       providerId: providerId,
       title: title,
       categories: categories,
-      price: price,
       description: description,
       location: location,
       coverImage: coverUrl,
@@ -185,9 +183,14 @@ class ServiceRepository {
       'providerId': service.providerId,
       'title': service.title,
       'description': service.description,
-      'categories': service.categories,
-      'category': service.primaryCategory,
-      'price': service.price,
+      'categories': service.categories.map((c) => c.toMap()).toList(),
+      'category': service.primaryCategory?.id ?? '',
+      'categoryPrices': {for (final c in service.categories) c.id: c.price},
+      'categoryTokens': [
+        ...service.categories.map((c) => c.id),
+        ...service.categories.map((c) => c.name),
+      ],
+      'price': service.primaryPrice,
       'rating': service.rating,
       'location': service.location,
       'cover_image': service.coverImage,
@@ -204,28 +207,27 @@ class ServiceRepository {
 
   ServiceModel _fromHit(Map<String, dynamic> hit) {
     final geo = hit['_geoloc'];
-    final categories = hit['categories'];
-    return ServiceModel(
-      id: hit['objectID'] ?? '',
-      providerId: hit['providerId'] ?? '',
-      title: hit['title'] ?? '',
-      categories: categories is Iterable
-          ? List<String>.from(categories)
-          : hit['category'] != null
-          ? [hit['category']]
-          : <String>[],
-      price: (hit['price'] as num?)?.toDouble() ?? 0,
-      description: hit['description'] ?? '',
-      location: hit['location'] ?? '',
-      latitude: (geo is Map && geo['lat'] is num)
+
+    final mapped = <String, dynamic>{
+      'providerId': hit['providerId'] ?? '',
+      'title': hit['title'] ?? '',
+      'categories': hit['categories'],
+      'category': hit['category'],
+      'price': hit['price'],
+      'description': hit['description'] ?? '',
+      'location': hit['location'] ?? '',
+      'latitude': (geo is Map && geo['lat'] is num)
           ? (geo['lat'] as num).toDouble()
           : null,
-      longitude: (geo is Map && geo['lng'] is num)
+      'longitude': (geo is Map && geo['lng'] is num)
           ? (geo['lng'] as num).toDouble()
           : null,
-      coverImage: hit['cover_image'] ?? '',
-      galleryImages: List<String>.from(hit['gallery_images'] ?? const []),
-      rating: (hit['rating'] as num?)?.toDouble() ?? 0,
-    );
+      'coverImage': hit['cover_image'] ?? '',
+      'galleryImages': List<String>.from(hit['gallery_images'] ?? const []),
+      'rating': (hit['rating'] as num?)?.toDouble() ?? 0,
+      'categoryPrices': hit['categoryPrices'],
+    };
+
+    return ServiceModel.fromMap(hit['objectID'] ?? '', mapped);
   }
 }

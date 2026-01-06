@@ -4,17 +4,15 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/validators.dart';
 import '../controllers/auth_controller.dart';
 
-class RegisterView extends StatefulWidget {
-  const RegisterView({super.key});
+class RegisterView extends GetView<AuthController> {
+  RegisterView({super.key});
 
-  @override
-  State<RegisterView> createState() => _RegisterViewState();
-}
-
-class _RegisterViewState extends State<RegisterView> {
   final _formKey = GlobalKey<FormState>();
+
   final _nameController = TextEditingController();
+
   final _emailController = TextEditingController();
+
   final _passwordController = TextEditingController();
 
   @override

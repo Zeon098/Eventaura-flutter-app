@@ -80,8 +80,7 @@ class ServiceController extends GetxController {
   Future<void> createService({
     required String providerId,
     required String title,
-    required List<String> categories,
-    required double price,
+    required List<ServiceCategory> categories,
     required String description,
     required String location,
     double? latitude,
@@ -101,7 +100,6 @@ class ServiceController extends GetxController {
         providerId: providerId,
         title: title,
         categories: categories,
-        price: price,
         description: description,
         location: location,
         cover: cover!,

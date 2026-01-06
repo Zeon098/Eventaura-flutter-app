@@ -4,7 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../data/models/service_model.dart';
 import '../../services/views/service_detail_view.dart';
 
-class MapView extends StatelessWidget {
+class MapView extends GetView {
   const MapView({super.key});
 
   @override

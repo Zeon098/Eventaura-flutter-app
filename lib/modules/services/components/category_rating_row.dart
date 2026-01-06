@@ -11,7 +11,15 @@ class CategoryRatingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final categories = service.categories.isNotEmpty
         ? service.categories
-        : (service.category.isNotEmpty ? [service.category] : const <String>[]);
+        : service.category.isNotEmpty
+        ? [
+            ServiceCategory(
+              id: service.category,
+              name: service.category,
+              price: service.primaryPrice,
+            ),
+          ]
+        : const <ServiceCategory>[];
 
     return Row(
       children: [
@@ -37,7 +45,7 @@ class CategoryRatingRow extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          c.toUpperCase(),
+                          c.name.toUpperCase(),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,

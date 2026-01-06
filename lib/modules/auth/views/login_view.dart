@@ -4,21 +4,17 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/validators.dart';
 import '../controllers/auth_controller.dart';
 
-class LoginView extends StatefulWidget {
-  const LoginView({super.key});
+class LoginView extends GetView<AuthController> {
+  LoginView({super.key});
 
-  @override
-  State<LoginView> createState() => _LoginViewState();
-}
-
-class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
+
   final _emailController = TextEditingController();
+
   final _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<AuthController>();
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(

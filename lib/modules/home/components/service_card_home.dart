@@ -211,7 +211,7 @@ class ServiceCardHome extends StatelessWidget {
               border: Border.all(color: AppTheme.primaryColor.withOpacity(0.3)),
             ),
             child: Text(
-              'PKR ${service.price.toStringAsFixed(0)}',
+              'PKR ${service.primaryPrice.toStringAsFixed(0)}',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,

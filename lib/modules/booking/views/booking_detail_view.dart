@@ -5,14 +5,13 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/booking_model.dart';
 import '../controllers/booking_controller.dart';
 
-class BookingDetailView extends StatelessWidget {
+class BookingDetailView extends GetView<BookingController> {
   const BookingDetailView({super.key, required this.booking});
 
   final BookingModel booking;
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<BookingController>();
     final user = controller.userStore.value;
     final isProvider = user?.role == 'provider' || user?.isProvider == true;
     return Scaffold(
@@ -64,7 +63,7 @@ class BookingDetailView extends StatelessWidget {
   }
 }
 
-class _ActionButtons extends StatelessWidget {
+class _ActionButtons extends GetView {
   const _ActionButtons({required this.booking, required this.controller});
 
   final BookingModel booking;

@@ -12,6 +12,9 @@ class BookingModel extends Equatable {
   final String serviceId;
   final String consumerId;
   final String providerId;
+  final String? categoryId;
+  final String? categoryName;
+  final double? categoryPrice;
   final String dateKey; // yyyy-MM-dd for easy querying by day
   final DateTime startTime;
   final DateTime endTime;
@@ -24,6 +27,9 @@ class BookingModel extends Equatable {
     required this.serviceId,
     required this.consumerId,
     required this.providerId,
+    this.categoryId,
+    this.categoryName,
+    this.categoryPrice,
     required this.dateKey,
     required this.startTime,
     required this.endTime,
@@ -37,6 +43,9 @@ class BookingModel extends Equatable {
       'serviceId': serviceId,
       'consumerId': consumerId,
       'providerId': providerId,
+      'categoryId': categoryId,
+      'categoryName': categoryName,
+      'categoryPrice': categoryPrice,
       'date': dateKey,
       'startTime': startTime.toIso8601String(),
       'endTime': endTime.toIso8601String(),
@@ -52,6 +61,9 @@ class BookingModel extends Equatable {
       serviceId: map['serviceId'],
       consumerId: map['consumerId'],
       providerId: map['providerId'],
+      categoryId: map['categoryId'],
+      categoryName: map['categoryName'],
+      categoryPrice: (map['categoryPrice'] as num?)?.toDouble(),
       dateKey: map['date'] ?? '',
       startTime: _parseDate(map['startTime']),
       endTime: _parseDate(map['endTime']),
@@ -89,6 +101,9 @@ class BookingModel extends Equatable {
     serviceId,
     consumerId,
     providerId,
+    categoryId,
+    categoryName,
+    categoryPrice,
     dateKey,
     startTime,
     endTime,

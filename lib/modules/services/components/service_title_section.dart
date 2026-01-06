@@ -4,11 +4,18 @@ import '../../../data/models/service_model.dart';
 
 class ServiceTitleSection extends StatelessWidget {
   final ServiceModel service;
+  final ServiceCategory? selectedCategory;
 
-  const ServiceTitleSection({super.key, required this.service});
+  const ServiceTitleSection({
+    super.key,
+    required this.service,
+    this.selectedCategory,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final category = selectedCategory ?? service.primaryCategory;
+    final price = category?.price ?? service.primaryPrice;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -50,7 +57,7 @@ class ServiceTitleSection extends StatelessWidget {
                 ),
               ),
               Text(
-                service.price.toStringAsFixed(0),
+                price.toStringAsFixed(0),
                 style: const TextStyle(
                   fontSize: 22,
                   color: Colors.white,

@@ -22,45 +22,31 @@ class ServiceFormView extends StatefulWidget {
 class _ServiceFormViewState extends State<ServiceFormView> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
-  final _price = TextEditingController();
   final _description = TextEditingController();
   final _location = TextEditingController();
   final Set<String> _selectedCategories = {};
+  final Map<String, TextEditingController> _categoryPriceControllers = {};
+  final Map<String, String> _categoryLabels = {};
   ServiceModel? _editingService;
   bool _isEditMode = false;
 
   final List<Map<String, dynamic>> _categories = [
-    {
-      'label': '🎨 Decoration',
-      'value': 'decoration',
-      'icon': Icons.auto_awesome,
-    },
-    {'label': '🏛️ Venue', 'value': 'venue', 'icon': Icons.location_city},
-    {'label': '🍽️ Food', 'value': 'food', 'icon': Icons.restaurant},
-    {
-      'label': '🍴 Catering',
-      'value': 'catering',
-      'icon': Icons.restaurant_menu,
-    },
-    {'label': '🔒 Security', 'value': 'security', 'icon': Icons.security},
-    {
-      'label': '🚗 Transport',
-      'value': 'transport',
-      'icon': Icons.directions_car,
-    },
-    {
-      'label': '📸 Photography',
-      'value': 'photography',
-      'icon': Icons.camera_alt,
-    },
-    {'label': '🎵 Music & DJ', 'value': 'music', 'icon': Icons.music_note},
-    {'label': '💐 Flowers', 'value': 'flowers', 'icon': Icons.local_florist},
-    {'label': '🎂 Bakery', 'value': 'bakery', 'icon': Icons.cake},
+    {'label': '🎨 Decoration', 'value': 'decoration'},
+    {'label': '🏛️ Venue', 'value': 'venue'},
+    {'label': '🍽️ Food', 'value': 'food'},
+    {'label': '🍴 Catering', 'value': 'catering'},
+    {'label': '🔒 Security', 'value': 'security'},
+    {'label': '📸 Photography', 'value': 'photography'},
+    {'label': '🎵 Music & DJ', 'value': 'music'},
+    {'label': '📋 Event Planning', 'value': 'event_planning'},
   ];
 
   @override
   void initState() {
     super.initState();
+    for (final cat in _categories) {
+      _categoryLabels[cat['value'] as String] = cat['label'] as String;
+    }
     // Check if we're editing an existing service
     if (Get.arguments != null && Get.arguments is ServiceModel) {
       _editingService = Get.arguments as ServiceModel;
@@ -72,16 +58,20 @@ class _ServiceFormViewState extends State<ServiceFormView> {
   void _populateFields() {
     if (_editingService != null) {
       _title.text = _editingService!.title;
-      _price.text = _editingService!.price.toString();
       _description.text = _editingService!.description;
       _location.text = _editingService!.location;
       _selectedCategories
         ..clear()
         ..addAll(
-          _editingService!.categories.isNotEmpty
-              ? _editingService!.categories
-              : [_editingService!.category],
+          _editingService!.categories
+              .map((c) => c.id)
+              .where((id) => id.isNotEmpty),
         );
+      for (final category in _editingService!.categories) {
+        _categoryPriceControllers[category.id] = TextEditingController(
+          text: category.price.toString(),
+        );
+      }
     }
   }
 
@@ -135,19 +125,20 @@ class _ServiceFormViewState extends State<ServiceFormView> {
                   setState(() {
                     if (_selectedCategories.contains(value)) {
                       _selectedCategories.remove(value);
+                      _categoryPriceControllers.remove(value)?.dispose();
                     } else {
                       _selectedCategories.add(value);
+                      _categoryPriceControllers[value] =
+                          TextEditingController();
                     }
                   });
                 },
               ),
               const SizedBox(height: 16),
-              StyledTextField(
-                controller: _price,
-                label: 'Price (PKR)',
-                hint: 'Enter your service price',
-                keyboardType: TextInputType.number,
-                validator: Validators.notEmpty,
+              _CategoryPriceInputs(
+                selectedCategories: _selectedCategories,
+                categories: _categories,
+                controllers: _categoryPriceControllers,
               ),
               const SizedBox(height: 24),
               const SectionTitle(title: '📍 Location'),
@@ -184,16 +175,60 @@ class _ServiceFormViewState extends State<ServiceFormView> {
                 isEditMode: _isEditMode,
                 editingService: _editingService,
                 titleController: _title,
-                priceController: _price,
                 descriptionController: _description,
                 locationController: _location,
                 selectedCategories: _selectedCategories.toList(),
+                categoryPriceControllers: _categoryPriceControllers,
+                categoryLabels: _categoryLabels,
               ),
               const SizedBox(height: 20),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _CategoryPriceInputs extends StatelessWidget {
+  const _CategoryPriceInputs({
+    required this.selectedCategories,
+    required this.categories,
+    required this.controllers,
+  });
+
+  final Set<String> selectedCategories;
+  final List<Map<String, dynamic>> categories;
+  final Map<String, TextEditingController> controllers;
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = categories.where(
+      (c) => selectedCategories.contains(c['value']),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (selected.isNotEmpty)
+          const Text(
+            'Set price per category',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ...selected.map((c) {
+          final id = c['value'] as String;
+          controllers.putIfAbsent(id, () => TextEditingController());
+          return Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: StyledTextField(
+              controller: controllers[id] ?? TextEditingController(),
+              label: '${c['label']} price (PKR)',
+              hint: 'e.g., 5000',
+              keyboardType: TextInputType.number,
+              validator: Validators.notEmpty,
+            ),
+          );
+        }),
+      ],
     );
   }
 }

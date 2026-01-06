@@ -131,7 +131,7 @@ class _ServiceExploreViewState extends State<ServiceExploreView> {
                       'All',
                       ...serviceController.services.expand(
                         (s) => s.categories.isNotEmpty
-                            ? s.categories
+                            ? s.categories.map((c) => c.name)
                             : [s.category],
                       ),
                     }.toList();

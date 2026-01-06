@@ -8,12 +8,14 @@ class BookButton extends StatefulWidget {
   final ServiceModel service;
   final BookingController bookingController;
   final String userId;
+  final ServiceCategory? selectedCategory;
 
   const BookButton({
     super.key,
     required this.service,
     required this.bookingController,
     required this.userId,
+    this.selectedCategory,
   });
 
   @override
@@ -104,6 +106,9 @@ class _BookButtonState extends State<BookButton> {
                       startTime: schedule.start,
                       endTime: schedule.end,
                       serviceTitle: widget.service.title,
+                      category:
+                          widget.selectedCategory ??
+                          widget.service.primaryCategory,
                     );
                     setState(() => _lastSchedule = schedule);
                   },

@@ -13,7 +13,7 @@ import '../components/welcome_header.dart';
 import '../controllers/home_controller.dart';
 import 'map_view.dart';
 
-class HomeView extends StatelessWidget {
+class HomeView extends GetView {
   const HomeView({super.key});
 
   @override

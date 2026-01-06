@@ -25,11 +25,28 @@ class ServiceDetailView extends StatefulWidget {
 class _ServiceDetailViewState extends State<ServiceDetailView> {
   late final ServiceModel service;
   late final BookingController bookingController;
+  ServiceCategory? _selectedCategory;
+
+  ServiceCategory? _findCategoryById(String? id) {
+    if (id == null) return null;
+    for (final c in service.categories) {
+      if (c.id == id) return c;
+    }
+    return null;
+  }
 
   @override
   void initState() {
     super.initState();
-    service = Get.arguments as ServiceModel;
+    final args = Get.arguments;
+    if (args is Map && args['service'] is ServiceModel) {
+      service = args['service'] as ServiceModel;
+      final catId = args['categoryId'] as String?;
+      _selectedCategory = _findCategoryById(catId) ?? service.primaryCategory;
+    } else {
+      service = args as ServiceModel;
+      _selectedCategory = service.primaryCategory;
+    }
     bookingController = Get.put(
       BookingController(
         bookingRepository: Get.find(),
@@ -70,7 +87,19 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ServiceTitleSection(service: service),
+                      ServiceTitleSection(
+                        service: service,
+                        selectedCategory: _selectedCategory,
+                      ),
+                      const SizedBox(height: 12),
+                      if (service.categories.isNotEmpty)
+                        _CategorySelector(
+                          categories: service.categories,
+                          selected: _selectedCategory,
+                          onSelect: (c) => setState(() {
+                            _selectedCategory = c;
+                          }),
+                        ),
                       const SizedBox(height: 16),
                       CategoryRatingRow(service: service),
                       const SizedBox(height: 20),
@@ -88,6 +117,7 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
                         service: service,
                         bookingController: bookingController,
                         userId: userId,
+                        selectedCategory: _selectedCategory,
                       ),
                       const SizedBox(height: 20),
                     ],
@@ -98,6 +128,41 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _CategorySelector extends StatelessWidget {
+  const _CategorySelector({
+    required this.categories,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  final List<ServiceCategory> categories;
+  final ServiceCategory? selected;
+  final ValueChanged<ServiceCategory> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: categories.map((c) {
+        final isSelected = selected?.id == c.id;
+        return ChoiceChip(
+          label: Text('${c.name} — PKR ${c.price.toStringAsFixed(0)}'),
+          selected: isSelected,
+          onSelected: (_) => onSelect(c),
+          selectedColor: AppTheme.primaryColor.withOpacity(0.15),
+          labelStyle: TextStyle(
+            color: isSelected
+                ? AppTheme.primaryColor
+                : AppTheme.textPrimaryColor,
+            fontWeight: FontWeight.w600,
+          ),
+        );
+      }).toList(),
     );
   }
 }

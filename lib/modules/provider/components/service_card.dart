@@ -170,7 +170,7 @@ class ServiceCard extends GetView {
                             ),
                           ),
                           Text(
-                            service.price.toStringAsFixed(0),
+                            service.primaryPrice.toStringAsFixed(0),
                             style: const TextStyle(
                               fontSize: 16,
                               color: Colors.white,

@@ -4,6 +4,7 @@ import '../../../core/services/notification_service.dart';
 import '../../../core/stores/user_store.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import '../../../data/models/booking_model.dart';
+import '../../../data/models/service_model.dart';
 import '../../../data/repositories/booking_repository.dart';
 import '../../../data/repositories/chat_repository.dart';
 import '../../../data/repositories/user_repository.dart';
@@ -72,11 +73,17 @@ class BookingController extends GetxController {
     required DateTime startTime,
     required DateTime endTime,
     String? serviceTitle,
+    ServiceCategory? category,
   }) async {
     try {
       isLoading.value = true;
       if (!startTime.isBefore(endTime)) {
         SnackbarUtils.error('Booking failed', 'End time must be after start');
+        return null;
+      }
+
+      if (category == null) {
+        SnackbarUtils.error('Booking failed', 'Select a category');
         return null;
       }
 
@@ -95,6 +102,9 @@ class BookingController extends GetxController {
         serviceId: serviceId,
         consumerId: consumerId,
         providerId: providerId,
+        categoryId: category.id,
+        categoryName: category.name,
+        categoryPrice: category.price,
         date: date,
         startTime: startTime,
         endTime: endTime,

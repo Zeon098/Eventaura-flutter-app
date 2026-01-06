@@ -11,10 +11,11 @@ class PublishButton extends StatelessWidget {
   final bool isEditMode;
   final ServiceModel? editingService;
   final TextEditingController titleController;
-  final TextEditingController priceController;
   final TextEditingController descriptionController;
   final TextEditingController locationController;
   final List<String> selectedCategories;
+  final Map<String, TextEditingController> categoryPriceControllers;
+  final Map<String, String> categoryLabels;
 
   const PublishButton({
     super.key,
@@ -22,10 +23,11 @@ class PublishButton extends StatelessWidget {
     required this.isEditMode,
     this.editingService,
     required this.titleController,
-    required this.priceController,
     required this.descriptionController,
     required this.locationController,
     required this.selectedCategories,
+    required this.categoryPriceControllers,
+    required this.categoryLabels,
   });
 
   @override
@@ -58,9 +60,6 @@ class PublishButton extends StatelessWidget {
                 ? null
                 : () {
                     if (formKey.currentState?.validate() ?? false) {
-                      final price =
-                          double.tryParse(priceController.text.trim()) ?? 0;
-
                       if (selectedCategories.isEmpty) {
                         SnackbarUtils.error(
                           'Category required',
@@ -69,12 +68,32 @@ class PublishButton extends StatelessWidget {
                         return;
                       }
 
+                      final categories = <ServiceCategory>[];
+                      for (final id in selectedCategories) {
+                        final controller = categoryPriceControllers[id];
+                        final raw = controller?.text.trim() ?? '';
+                        final price = double.tryParse(raw);
+                        if (price == null) {
+                          SnackbarUtils.error(
+                            'Price missing',
+                            'Enter price for $id',
+                          );
+                          return;
+                        }
+                        categories.add(
+                          ServiceCategory(
+                            id: id,
+                            name: categoryLabels[id] ?? id,
+                            price: price,
+                          ),
+                        );
+                      }
+
                       if (isEditMode && editingService != null) {
                         // Update existing service
                         final updatedService = editingService!.copyWith(
                           title: titleController.text.trim(),
-                          categories: selectedCategories,
-                          price: price,
+                          categories: categories,
                           description: descriptionController.text.trim(),
                           location: locationController.text.trim(),
                           latitude: controller.latitude.value,
@@ -86,8 +105,7 @@ class PublishButton extends StatelessWidget {
                         controller.createService(
                           providerId: shell.user.value?.id ?? '',
                           title: titleController.text.trim(),
-                          categories: selectedCategories,
-                          price: price,
+                          categories: categories,
                           description: descriptionController.text.trim(),
                           location: locationController.text.trim(),
                           latitude: controller.latitude.value,

@@ -97,7 +97,7 @@ class AlgoliaSearchController extends GetxController {
     if (minPrice != null) filters.add('price >= $minPrice');
     if (maxPrice != null) filters.add('price <= $maxPrice');
     if (category != null && category.isNotEmpty) {
-      filters.add('(categories:"$category" OR category:"$category")');
+      filters.add('(categoryTokens:"$category" OR category:"$category")');
     }
     if (filters.isNotEmpty) {
       query = query.setFilters(filters.join(' AND '));
@@ -107,28 +107,26 @@ class AlgoliaSearchController extends GetxController {
 
   ServiceModel _fromHit(Map<String, dynamic> hit) {
     final geo = hit['_geoloc'];
-    final categories = hit['categories'];
-    return ServiceModel(
-      id: hit['objectID'] ?? '',
-      providerId: hit['providerId'] ?? '',
-      title: hit['title'] ?? '',
-      categories: categories is Iterable
-          ? List<String>.from(categories)
-          : hit['category'] != null
-          ? [hit['category']]
-          : <String>[],
-      price: (hit['price'] as num?)?.toDouble() ?? 0,
-      description: hit['description'] ?? '',
-      location: hit['location'] ?? '',
-      latitude: (geo is Map && geo['lat'] is num)
+    final mapped = <String, dynamic>{
+      'providerId': hit['providerId'] ?? '',
+      'title': hit['title'] ?? '',
+      'categories': hit['categories'],
+      'category': hit['category'],
+      'price': hit['price'],
+      'description': hit['description'] ?? '',
+      'location': hit['location'] ?? '',
+      'latitude': (geo is Map && geo['lat'] is num)
           ? (geo['lat'] as num).toDouble()
           : null,
-      longitude: (geo is Map && geo['lng'] is num)
+      'longitude': (geo is Map && geo['lng'] is num)
           ? (geo['lng'] as num).toDouble()
           : null,
-      coverImage: hit['cover_image'] ?? '',
-      galleryImages: List<String>.from(hit['gallery_images'] ?? const []),
-      rating: (hit['rating'] as num?)?.toDouble() ?? 0,
-    );
+      'coverImage': hit['cover_image'] ?? '',
+      'galleryImages': List<String>.from(hit['gallery_images'] ?? const []),
+      'rating': (hit['rating'] as num?)?.toDouble() ?? 0,
+      'categoryPrices': hit['categoryPrices'],
+    };
+
+    return ServiceModel.fromMap(hit['objectID'] ?? '', mapped);
   }
 }

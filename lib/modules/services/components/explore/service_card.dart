@@ -209,7 +209,7 @@ class ServiceCard extends StatelessWidget {
         ),
       ),
       child: Text(
-        'PKR ${service.price.toStringAsFixed(0)}',
+        'PKR ${service.primaryPrice.toStringAsFixed(0)}',
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.bold,
