@@ -73,7 +73,7 @@ class BookingController extends GetxController {
     required DateTime startTime,
     required DateTime endTime,
     String? serviceTitle,
-    ServiceCategory? category,
+    required List<ServiceCategory> categories,
   }) async {
     try {
       isLoading.value = true;
@@ -82,10 +82,14 @@ class BookingController extends GetxController {
         return null;
       }
 
-      if (category == null) {
-        SnackbarUtils.error('Booking failed', 'Select a category');
+      if (categories.isEmpty) {
+        SnackbarUtils.error('Booking failed', 'Select at least one category');
         return null;
       }
+
+      final ids = categories.map((c) => c.id).toList();
+      final names = categories.map((c) => c.name).toList();
+      final totalPrice = categories.fold<double>(0, (sum, c) => sum + c.price);
 
       final hasClash = await bookingRepository.hasOverlap(
         providerId: providerId,
@@ -102,9 +106,9 @@ class BookingController extends GetxController {
         serviceId: serviceId,
         consumerId: consumerId,
         providerId: providerId,
-        categoryId: category.id,
-        categoryName: category.name,
-        categoryPrice: category.price,
+        categoryIds: ids,
+        categoryNames: names,
+        totalPrice: totalPrice,
         date: date,
         startTime: startTime,
         endTime: endTime,

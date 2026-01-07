@@ -12,9 +12,12 @@ class BookingModel extends Equatable {
   final String serviceId;
   final String consumerId;
   final String providerId;
-  final String? categoryId;
-  final String? categoryName;
-  final double? categoryPrice;
+  final String? categoryId; // legacy single selection
+  final String? categoryName; // legacy single selection
+  final double? categoryPrice; // legacy single selection
+  final List<String> categoryIds;
+  final List<String> categoryNames;
+  final double? totalPrice;
   final String dateKey; // yyyy-MM-dd for easy querying by day
   final DateTime startTime;
   final DateTime endTime;
@@ -30,6 +33,9 @@ class BookingModel extends Equatable {
     this.categoryId,
     this.categoryName,
     this.categoryPrice,
+    this.categoryIds = const [],
+    this.categoryNames = const [],
+    this.totalPrice,
     required this.dateKey,
     required this.startTime,
     required this.endTime,
@@ -46,6 +52,9 @@ class BookingModel extends Equatable {
       'categoryId': categoryId,
       'categoryName': categoryName,
       'categoryPrice': categoryPrice,
+      'categoryIds': categoryIds,
+      'categoryNames': categoryNames,
+      'totalPrice': totalPrice,
       'date': dateKey,
       'startTime': startTime.toIso8601String(),
       'endTime': endTime.toIso8601String(),
@@ -64,6 +73,11 @@ class BookingModel extends Equatable {
       categoryId: map['categoryId'],
       categoryName: map['categoryName'],
       categoryPrice: (map['categoryPrice'] as num?)?.toDouble(),
+      categoryIds: List<String>.from(map['categoryIds'] ?? const <String>[]),
+      categoryNames: List<String>.from(
+        map['categoryNames'] ?? const <String>[],
+      ),
+      totalPrice: (map['totalPrice'] as num?)?.toDouble(),
       dateKey: map['date'] ?? '',
       startTime: _parseDate(map['startTime']),
       endTime: _parseDate(map['endTime']),
@@ -104,6 +118,9 @@ class BookingModel extends Equatable {
     categoryId,
     categoryName,
     categoryPrice,
+    categoryIds,
+    categoryNames,
+    totalPrice,
     dateKey,
     startTime,
     endTime,
