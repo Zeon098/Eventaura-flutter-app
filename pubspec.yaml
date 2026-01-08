@@ -48,6 +48,7 @@ dependencies:
   intl: ^0.20.2
   uuid: ^4.5.1
   get_storage: ^2.1.1
+  rxdart: ^0.27.7
   flutter_local_notifications: ^17.2.2
   animations: ^2.0.11
   url_launcher: ^6.3.1

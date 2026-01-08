@@ -109,6 +109,22 @@ class BookingDialog extends StatelessWidget {
                         '${DateFormat('h:mm a').format(booking.startTime)} - ${DateFormat('h:mm a').format(booking.endTime)}',
                   ),
                   _ServiceInfoRow(serviceId: booking.serviceId),
+                  if (booking.categoryNames.isNotEmpty)
+                    InfoRow(
+                      icon: Icons.category,
+                      label: 'Categories',
+                      value: booking.categoryNames.join(', '),
+                    ),
+                  if (booking.totalPrice != null)
+                    InfoRow(
+                      icon: Icons.payments,
+                      label: 'Total Price',
+                      value: 'PKR ${booking.totalPrice!.toStringAsFixed(0)}',
+                      valueStyle: TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   _UserInfoRow(
                     userId: isProvider
                         ? booking.consumerId
@@ -199,6 +215,35 @@ class BookingDialog extends StatelessWidget {
                     icon: const Icon(Icons.check_circle),
                     label: const Text(
                       'Mark Completed',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              )
+            else if (!isProvider && booking.isPending)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.errorColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      controller.updateStatus(
+                        booking.id,
+                        BookingModel.cancelled,
+                      );
+                    },
+                    icon: const Icon(Icons.cancel),
+                    label: const Text(
+                      'Cancel Booking',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),

@@ -102,17 +102,6 @@ class ServiceCard extends GetView {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          Icon(Icons.star, size: 16, color: Colors.amber),
-                          const SizedBox(width: 4),
-                          Text(
-                            service.rating.toStringAsFixed(1),
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.textSecondaryColor,
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 6),
@@ -133,6 +122,20 @@ class ServiceCard extends GetView {
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Icon(Icons.star, size: 16, color: Colors.amber),
+                          const SizedBox(width: 4),
+                          Text(
+                            service.rating.toStringAsFixed(1),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textSecondaryColor,
                             ),
                           ),
                         ],

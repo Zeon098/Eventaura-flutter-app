@@ -50,21 +50,25 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
         _selectedCategories.add(service.primaryCategory!);
       }
     }
-    bookingController = Get.put(
-      BookingController(
-        bookingRepository: Get.find(),
-        chatRepository: Get.find(),
-        userRepository: Get.find<UserRepository>(),
-        notificationService: Get.find(),
-        userStore: Get.find(),
-      ),
-      tag: service.id,
-    );
+    // Use existing controller if available to maintain stream connections
+    if (Get.isRegistered<BookingController>()) {
+      bookingController = Get.find<BookingController>();
+    } else {
+      bookingController = Get.put(
+        BookingController(
+          bookingRepository: Get.find(),
+          chatRepository: Get.find(),
+          userRepository: Get.find<UserRepository>(),
+          notificationService: Get.find(),
+          userStore: Get.find(),
+        ),
+      );
+    }
   }
 
   @override
   void dispose() {
-    Get.delete<BookingController>(tag: service.id);
+    // Don't delete the global controller
     super.dispose();
   }
 

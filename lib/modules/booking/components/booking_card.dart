@@ -15,11 +15,15 @@ class BookingCard extends StatelessWidget {
     required this.booking,
     required this.isProvider,
     required this.onTap,
+    this.showDirection = false,
+    this.isIncoming = false,
   });
 
   final BookingModel booking;
   final bool isProvider;
   final VoidCallback onTap;
+  final bool showDirection;
+  final bool isIncoming;
 
   @override
   Widget build(BuildContext context) {
@@ -91,6 +95,40 @@ class BookingCard extends StatelessWidget {
                           ],
                         ),
                       ),
+                      if (showDirection) ...[
+                        Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.25),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isIncoming
+                                    ? Icons.arrow_downward
+                                    : Icons.arrow_upward,
+                                color: Colors.white,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                isIncoming ? 'In' : 'Out',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       StatusChip(status: booking.status),
                     ],
                   ),

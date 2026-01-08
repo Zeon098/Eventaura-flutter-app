@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../home/controllers/shell_controller.dart';
 import '../components/booking_list_tab.dart';
+import '../components/booking_list_tab_combined.dart';
 import '../controllers/booking_controller.dart';
 
 class BookingListView extends GetView<BookingController> {
@@ -22,7 +23,7 @@ class BookingListView extends GetView<BookingController> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        backgroundColor: AppTheme.surfaceColor,
+        backgroundColor: AppTheme.backgroundColor,
         appBar: AppBar(
           elevation: 0,
           backgroundColor: Colors.white,
@@ -70,28 +71,39 @@ class BookingListView extends GetView<BookingController> {
             ),
           ),
         ),
-        body: TabBarView(
-          children: [
-            BookingListTab(
-              stream: isProvider
-                  ? controller.providerRequests(userId)
-                  : controller.consumerRequests(userId),
-              isProvider: isProvider,
-            ),
-            BookingListTab(
-              stream: isProvider
-                  ? controller.providerUpcoming(userId)
-                  : controller.consumerUpcoming(userId),
-              isProvider: isProvider,
-            ),
-            BookingListTab(
-              stream: isProvider
-                  ? controller.providerHistory(userId)
-                  : controller.consumerHistory(userId),
-              isProvider: isProvider,
-            ),
-          ],
-        ),
+        body: isProvider
+            ? TabBarView(
+                children: [
+                  BookingListTabCombined(
+                    stream: controller.combinedRequests(userId),
+                    userId: userId,
+                  ),
+                  BookingListTabCombined(
+                    stream: controller.combinedUpcoming(userId),
+                    userId: userId,
+                  ),
+                  BookingListTabCombined(
+                    stream: controller.combinedHistory(userId),
+                    userId: userId,
+                  ),
+                ],
+              )
+            : TabBarView(
+                children: [
+                  BookingListTab(
+                    stream: controller.consumerRequests(userId),
+                    isProvider: false,
+                  ),
+                  BookingListTab(
+                    stream: controller.consumerUpcoming(userId),
+                    isProvider: false,
+                  ),
+                  BookingListTab(
+                    stream: controller.consumerHistory(userId),
+                    isProvider: false,
+                  ),
+                ],
+              ),
       ),
     );
   }

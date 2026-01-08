@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:rxdart/rxdart.dart' as rxdart;
 import '../../../core/services/notification_service.dart';
 import '../../../core/stores/user_store.dart';
 import '../../../core/utils/snackbar_utils.dart';
@@ -8,6 +9,15 @@ import '../../../data/models/service_model.dart';
 import '../../../data/repositories/booking_repository.dart';
 import '../../../data/repositories/chat_repository.dart';
 import '../../../data/repositories/user_repository.dart';
+
+enum BookingDirection { incoming, outgoing }
+
+class BookingWithDirection {
+  final BookingModel booking;
+  final BookingDirection direction;
+
+  BookingWithDirection(this.booking, this.direction);
+}
 
 class BookingController extends GetxController {
   BookingController({
@@ -64,6 +74,90 @@ class BookingController extends GetxController {
         BookingModel.completed,
         BookingModel.cancelled,
       ]);
+
+  // Combined streams for providers showing both incoming and outgoing bookings
+  Stream<List<BookingWithDirection>> combinedRequests(String userId) {
+    return rxdart.Rx.combineLatest2(
+      bookingRepository.watchProviderBookingsByStatus(userId, [
+        BookingModel.pending,
+      ]),
+      bookingRepository.watchUserBookingsByStatus(userId, [
+        BookingModel.pending,
+      ]),
+      (List<BookingModel> incoming, List<BookingModel> outgoing) {
+        final combined = <BookingWithDirection>[
+          ...incoming.map(
+            (b) => BookingWithDirection(b, BookingDirection.incoming),
+          ),
+          ...outgoing.map(
+            (b) => BookingWithDirection(b, BookingDirection.outgoing),
+          ),
+        ];
+        combined.sort(
+          (a, b) => b.booking.createdAt.compareTo(a.booking.createdAt),
+        );
+        return combined;
+      },
+    );
+  }
+
+  Stream<List<BookingWithDirection>> combinedUpcoming(String userId) {
+    return rxdart.Rx.combineLatest2(
+      bookingRepository.watchProviderBookingsByStatus(userId, [
+        BookingModel.accepted,
+      ]),
+      bookingRepository.watchUserBookingsByStatus(userId, [
+        BookingModel.accepted,
+      ]),
+      (List<BookingModel> incoming, List<BookingModel> outgoing) {
+        final combined = <BookingWithDirection>[
+          ...incoming.map(
+            (b) => BookingWithDirection(b, BookingDirection.incoming),
+          ),
+          ...outgoing.map(
+            (b) => BookingWithDirection(b, BookingDirection.outgoing),
+          ),
+        ];
+        combined.sort(
+          (a, b) => a.booking.startTime.compareTo(b.booking.startTime),
+        );
+        return combined;
+      },
+    );
+  }
+
+  Stream<List<BookingWithDirection>> combinedHistory(String userId) {
+    return rxdart.Rx.combineLatest2(
+      bookingRepository.watchProviderBookingsByStatus(userId, [
+        BookingModel.rejected,
+        BookingModel.completed,
+        BookingModel.cancelled,
+      ]),
+      bookingRepository.watchUserBookingsByStatus(userId, [
+        BookingModel.rejected,
+        BookingModel.completed,
+        BookingModel.cancelled,
+      ]),
+      (List<BookingModel> incoming, List<BookingModel> outgoing) {
+        final combined = <BookingWithDirection>[
+          ...incoming.map(
+            (b) => BookingWithDirection(b, BookingDirection.incoming),
+          ),
+          ...outgoing.map(
+            (b) => BookingWithDirection(b, BookingDirection.outgoing),
+          ),
+        ];
+        combined.sort(
+          (a, b) =>
+              b.booking.updatedAt?.compareTo(
+                a.booking.updatedAt ?? b.booking.createdAt,
+              ) ??
+              0,
+        );
+        return combined;
+      },
+    );
+  }
 
   Future<BookingModel?> createBooking({
     required String serviceId,
@@ -147,31 +241,40 @@ class BookingController extends GetxController {
 
       final isProviderOrAdmin =
           currentUser.role == 'provider' || currentUser.role == 'admin';
-      if (!isProviderOrAdmin) {
-        SnackbarUtils.error('Booking', 'Only providers can update bookings');
-        return;
-      }
+      final isConsumer = booking.consumerId == currentUser.id;
 
-      if (booking.isPending &&
-          (status == BookingModel.accepted ||
-              status == BookingModel.rejected)) {
-        await bookingRepository.updateStatus(id, status);
-      } else if (booking.isAccepted && status == BookingModel.completed) {
-        await bookingRepository.updateStatus(id, status);
-      } else if (status == BookingModel.cancelled) {
+      // Provider actions
+      if (isProviderOrAdmin) {
+        if (booking.isPending &&
+            (status == BookingModel.accepted ||
+                status == BookingModel.rejected)) {
+          await bookingRepository.updateStatus(id, status);
+        } else if (booking.isAccepted && status == BookingModel.completed) {
+          await bookingRepository.updateStatus(id, status);
+        } else if (status == BookingModel.cancelled) {
+          await bookingRepository.updateStatus(id, status);
+        } else {
+          SnackbarUtils.error('Booking', 'Invalid status transition');
+          return;
+        }
+      }
+      // Consumer can only cancel pending bookings
+      else if (isConsumer &&
+          booking.isPending &&
+          status == BookingModel.cancelled) {
         await bookingRepository.updateStatus(id, status);
       } else {
-        SnackbarUtils.error('Booking', 'Invalid status transition');
+        SnackbarUtils.error('Booking', 'You can only cancel pending bookings');
         return;
       }
 
       final refreshed = await bookingRepository.getBooking(id);
       if (refreshed != null) {
-        final providerName = userStore.value?.displayName;
+        final userName = userStore.value?.displayName;
         await notificationService.notifyBookingStatusChange(
           booking: refreshed,
           status: status,
-          providerName: providerName,
+          providerName: userName,
         );
       }
       SnackbarUtils.success('Booking', 'Status updated to $status');

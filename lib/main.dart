@@ -30,7 +30,6 @@ Future<void> main() async {
   await push.initLocalNotifications();
   await push.requestPermission();
   push.listenForeground();
-  // Note: User-specific notification listening starts after login in ShellController
   runApp(const EventauraApp());
 }
 

@@ -7,11 +7,13 @@ class InfoRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.valueStyle,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final TextStyle? valueStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -43,11 +45,13 @@ class InfoRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.textPrimaryColor,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style:
+                      valueStyle ??
+                      TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.textPrimaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ],
             ),
