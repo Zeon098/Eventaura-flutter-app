@@ -167,6 +167,7 @@ class ServiceController extends GetxController {
       SnackbarUtils.error('Location', e.message);
     } catch (e) {
       SnackbarUtils.error('Location', e.toString());
+      debugPrint('Location permission denied: ${e.toString()}');
     } finally {
       isLoading.value = false;
     }

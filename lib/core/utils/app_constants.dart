@@ -16,4 +16,6 @@ class AppConstants {
   static const algoliaAdminKeyKey = 'ALGOLIA_ADMIN_API_KEY';
   static const cloudinaryCloudNameKey = 'CLOUDINARY_CLOUD_NAME';
   static const cloudinaryUploadPresetKey = 'CLOUDINARY_UPLOAD_PRESET';
+  static const mapboxAccessTokenKey = 'MAPBOX_ACCESS_TOKEN';
+  static const mapboxStyleLight = 'mapbox://styles/mapbox/light-v11';
 }

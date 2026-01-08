@@ -2,9 +2,11 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'core/services/firebase/firebase_initializer.dart';
 import 'core/services/firebase/push_notification_service.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/app_constants.dart';
 import 'routes/app_pages.dart';
 import 'routes/global_binding.dart';
 
@@ -21,6 +23,9 @@ Future<void> main() async {
   } catch (_) {
     // ignore missing env file in development
   }
+  MapboxOptions.setAccessToken(
+    dotenv.env[AppConstants.mapboxAccessTokenKey] ?? '',
+  );
   await FirebaseInitializer.init();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   final push = Get.put<PushNotificationService>(

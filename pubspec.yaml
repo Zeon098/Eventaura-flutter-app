@@ -55,7 +55,7 @@ dependencies:
   equatable: ^2.0.5
   http: ^1.0.0
   flutter_dotenv: ^6.0.0
-  google_maps_flutter: ^2.14.0
+  mapbox_maps_flutter: ^2.17.0
 
 dev_dependencies:
   flutter_test:

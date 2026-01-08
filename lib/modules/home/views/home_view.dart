@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/stores/user_store.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/repositories/service_repository.dart';
@@ -219,11 +218,14 @@ class HomeView extends GetView {
                                       Get.to(
                                         () => const MapView(),
                                         arguments: {
-                                          'services': homeController.nearby
-                                              .toList(),
-                                          'center':
-                                              homeController.userLatLng ??
-                                              const LatLng(0, 0),
+                                          'services':
+                                              homeController.nearby.toList(),
+                                          'center': {
+                                            'lat': homeController.userLat ??
+                                                0,
+                                            'lng': homeController.userLng ??
+                                                0,
+                                          },
                                         },
                                       );
                                     }

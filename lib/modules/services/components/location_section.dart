@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/app_constants.dart';
 import '../../../data/models/service_model.dart';
 import 'section_card.dart';
 
@@ -72,23 +73,46 @@ class LocationSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               child: SizedBox(
                 height: 220,
-                child: GoogleMap(
-                  liteModeEnabled: true,
-                  zoomControlsEnabled: false,
-                  myLocationButtonEnabled: false,
-                  initialCameraPosition: CameraPosition(
-                    target: LatLng(service.latitude!, service.longitude!),
-                    zoom: 14,
-                  ),
-                  markers: {
-                    Marker(
-                      markerId: MarkerId(service.id),
-                      position: LatLng(service.latitude!, service.longitude!),
-                      infoWindow: InfoWindow(title: service.title),
+                child: Stack(
+                  children: [
+                    MapWidget(
+                      cameraOptions: CameraOptions(
+                        center: Point(
+                          coordinates: Position(
+                            service.longitude!,
+                            service.latitude!,
+                          ),
+                        ),
+                        zoom: 14,
+                      ),
+                      styleUri: AppConstants.mapboxStyleLight,
+                      onMapCreated: (mapboxMap) async {
+                        final manager = await mapboxMap.annotations
+                            .createPointAnnotationManager();
+                        await manager.create(
+                          PointAnnotationOptions(
+                            geometry: Point(
+                              coordinates: Position(
+                                service.longitude!,
+                                service.latitude!,
+                              ),
+                            ),
+                            iconImage: 'marker-15',
+                            iconSize: 1.4,
+                          ),
+                        );
+                      },
                     ),
-                  },
-                  onTap: (_) =>
-                      _openMaps(service.latitude!, service.longitude!),
+                    Positioned.fill(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () =>
+                              _openMaps(service.latitude!, service.longitude!),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             )

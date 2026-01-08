@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:get/get.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/stores/user_store.dart';
 import '../../../data/models/service_model.dart';
@@ -25,7 +24,8 @@ class HomeController extends GetxController {
   final myServicesLoading = false.obs;
   final error = RxnString();
   final hasLocation = false.obs;
-  LatLng? userLatLng;
+  double? userLat;
+  double? userLng;
   Stream<List<ServiceModel>>? _myServicesStream;
   StreamSubscription<List<ServiceModel>>? _myServicesSub;
 
@@ -72,7 +72,8 @@ class HomeController extends GetxController {
         lng = position.longitude;
       }
 
-      userLatLng = LatLng(lat, lng);
+      userLat = lat;
+      userLng = lng;
       hasLocation.value = true;
       final items = await serviceRepository.fetchNearby(
         latitude: lat,
