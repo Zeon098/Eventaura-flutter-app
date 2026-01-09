@@ -6,6 +6,7 @@ import '../../../data/repositories/service_repository.dart';
 import '../../notifications/views/notification_list_view.dart';
 import '../../services/views/service_explore_view.dart';
 import '../components/horizontal_services_list.dart';
+import '../components/vertical_venue_card.dart';
 import '../components/search_bar_home.dart';
 import '../components/section_header.dart';
 import '../components/welcome_header.dart';
@@ -93,47 +94,47 @@ class HomeView extends GetView {
               ),
               const SizedBox(height: 32),
 
-              // Your Services Section (Provider only)
-              if (user != null && (user.isProvider || user.role == 'provider'))
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 32),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Obx(
-                          () => SectionHeader(
-                            title: 'Your Services',
-                            icon: Icons.work_outline_rounded,
-                            trailing: homeController.myServicesLoading.value
-                                ? SizedBox(
-                                    height: 22,
-                                    width: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        AppTheme.primaryColor,
-                                      ),
-                                    ),
-                                  )
-                                : null,
-                          ),
-                        ),
-                      ),
-                      Obx(() {
-                        final items = homeController.myServices;
-                        if (items.isEmpty) {
-                          return const EmptyServicesState(
-                            message: 'You have no services yet.',
-                            icon: Icons.work_off_outlined,
-                          );
-                        }
-                        return HorizontalServicesList(services: items);
-                      }),
-                    ],
-                  ),
-                ),
+              // // Your Services Section (Provider only)
+              // if (user != null && (user.isProvider || user.role == 'provider'))
+              //   Padding(
+              //     padding: const EdgeInsets.only(bottom: 32),
+              //     child: Column(
+              //       crossAxisAlignment: CrossAxisAlignment.start,
+              //       children: [
+              //         Padding(
+              //           padding: const EdgeInsets.symmetric(horizontal: 20),
+              //           child: Obx(
+              //             () => SectionHeader(
+              //               title: 'Your Services',
+              //               icon: Icons.work_outline_rounded,
+              //               trailing: homeController.myServicesLoading.value
+              //                   ? SizedBox(
+              //                       height: 22,
+              //                       width: 22,
+              //                       child: CircularProgressIndicator(
+              //                         strokeWidth: 2,
+              //                         valueColor: AlwaysStoppedAnimation<Color>(
+              //                           AppTheme.primaryColor,
+              //                         ),
+              //                       ),
+              //                     )
+              //                   : null,
+              //             ),
+              //           ),
+              //         ),
+              //         Obx(() {
+              //           final items = homeController.myServices;
+              //           if (items.isEmpty) {
+              //             return const EmptyServicesState(
+              //               message: 'You have no services yet.',
+              //               icon: Icons.work_off_outlined,
+              //             );
+              //           }
+              //           return HorizontalServicesList(services: items);
+              //         }),
+              //       ],
+              //     ),
+              //   ),
 
               // Trending Services Section
               Padding(
@@ -187,7 +188,7 @@ class HomeView extends GetView {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: SectionHeader(
-                          title: 'Nearby Services',
+                          title: 'Nearby Venues',
                           icon: Icons.location_on_rounded,
                           trailing: Container(
                             decoration: BoxDecoration(
@@ -214,17 +215,25 @@ class HomeView extends GetView {
                               ),
                               tooltip: 'View on map',
                               onPressed: hasLocation
-                                  ? () {
+                                  ? () async {
+                                      // Fetch all nearby services for map view
+                                      final allNearbyServices =
+                                          await Get.find<ServiceRepository>()
+                                              .fetchNearby(
+                                                latitude:
+                                                    homeController.userLat!,
+                                                longitude:
+                                                    homeController.userLng!,
+                                                limit: 20,
+                                                radiusKm: 50,
+                                              );
                                       Get.to(
                                         () => const MapView(),
                                         arguments: {
-                                          'services':
-                                              homeController.nearby.toList(),
+                                          'services': allNearbyServices,
                                           'center': {
-                                            'lat': homeController.userLat ??
-                                                0,
-                                            'lng': homeController.userLng ??
-                                                0,
+                                            'lat': homeController.userLat ?? 0,
+                                            'lng': homeController.userLng ?? 0,
                                           },
                                         },
                                       );
@@ -234,6 +243,47 @@ class HomeView extends GetView {
                           ),
                         ),
                       ),
+                      // Venue Subtype Chips
+                      Obx(() {
+                        final items = homeController.nearby;
+                        if (items.isEmpty ||
+                            homeController.nearbyLoading.value) {
+                          return const SizedBox.shrink();
+                        }
+                        // Get unique venue subtypes
+                        final subtypes = items
+                            .expand((service) => service.venueSubtypes)
+                            .toSet()
+                            .toList();
+                        if (subtypes.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        return Container(
+                          height: 50,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            itemCount: subtypes.length,
+                            itemBuilder: (context, index) {
+                              final subtype = subtypes[index];
+                              return Container(
+                                margin: const EdgeInsets.only(right: 8),
+                                child: Chip(
+                                  label: Text(subtype),
+                                  backgroundColor: AppTheme.primaryColor
+                                      .withOpacity(0.1),
+                                  labelStyle: TextStyle(
+                                    color: AppTheme.primaryColor,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      }),
                       Obx(() {
                         if (homeController.nearbyLoading.value) {
                           return Container(
@@ -252,11 +302,15 @@ class HomeView extends GetView {
                         if (items.isEmpty) {
                           return const EmptyServicesState(
                             message:
-                                'Location unavailable or no services nearby.',
+                                'Location unavailable or no venues nearby.',
                             icon: Icons.location_off_rounded,
                           );
                         }
-                        return HorizontalServicesList(services: items);
+                        return Column(
+                          children: items.map((service) {
+                            return VerticalVenueCard(service: service);
+                          }).toList(),
+                        );
                       }),
                     ],
                   ),

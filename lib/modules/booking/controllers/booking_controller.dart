@@ -36,6 +36,12 @@ class BookingController extends GetxController {
   final bookings = <BookingModel>[].obs;
   final isLoading = false.obs;
 
+  // Cache combined streams to prevent recreation
+  Stream<List<BookingWithDirection>>? _cachedCombinedRequests;
+  Stream<List<BookingWithDirection>>? _cachedCombinedUpcoming;
+  Stream<List<BookingWithDirection>>? _cachedCombinedHistory;
+  String? _cachedUserId;
+
   Stream<List<BookingModel>> watchConsumer(String userId) =>
       bookingRepository.watchUserBookings(userId);
   Stream<List<BookingModel>> watchProvider(String providerId) =>
@@ -77,7 +83,12 @@ class BookingController extends GetxController {
 
   // Combined streams for providers showing both incoming and outgoing bookings
   Stream<List<BookingWithDirection>> combinedRequests(String userId) {
-    return rxdart.Rx.combineLatest2(
+    if (_cachedUserId != userId) {
+      _clearCachedStreams();
+      _cachedUserId = userId;
+    }
+
+    return _cachedCombinedRequests ??= rxdart.Rx.combineLatest2(
       bookingRepository.watchProviderBookingsByStatus(userId, [
         BookingModel.pending,
       ]),
@@ -98,11 +109,16 @@ class BookingController extends GetxController {
         );
         return combined;
       },
-    );
+    ).shareReplay(maxSize: 1);
   }
 
   Stream<List<BookingWithDirection>> combinedUpcoming(String userId) {
-    return rxdart.Rx.combineLatest2(
+    if (_cachedUserId != userId) {
+      _clearCachedStreams();
+      _cachedUserId = userId;
+    }
+
+    return _cachedCombinedUpcoming ??= rxdart.Rx.combineLatest2(
       bookingRepository.watchProviderBookingsByStatus(userId, [
         BookingModel.accepted,
       ]),
@@ -123,11 +139,16 @@ class BookingController extends GetxController {
         );
         return combined;
       },
-    );
+    ).shareReplay(maxSize: 1);
   }
 
   Stream<List<BookingWithDirection>> combinedHistory(String userId) {
-    return rxdart.Rx.combineLatest2(
+    if (_cachedUserId != userId) {
+      _clearCachedStreams();
+      _cachedUserId = userId;
+    }
+
+    return _cachedCombinedHistory ??= rxdart.Rx.combineLatest2(
       bookingRepository.watchProviderBookingsByStatus(userId, [
         BookingModel.rejected,
         BookingModel.completed,
@@ -156,7 +177,13 @@ class BookingController extends GetxController {
         );
         return combined;
       },
-    );
+    ).shareReplay(maxSize: 1);
+  }
+
+  void _clearCachedStreams() {
+    _cachedCombinedRequests = null;
+    _cachedCombinedUpcoming = null;
+    _cachedCombinedHistory = null;
   }
 
   Future<BookingModel?> createBooking({

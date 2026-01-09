@@ -5,6 +5,7 @@ import '../../../core/utils/validators.dart';
 import '../../../data/models/user_model.dart';
 import '../../../routes/app_routes.dart';
 import '../../home/controllers/shell_controller.dart';
+import '../../../widgets/address_picker_field.dart';
 import '../controllers/profile_controller.dart';
 
 class ProfileView extends GetView<ProfileController> {
@@ -29,6 +30,8 @@ class _ProfileContentState extends State<_ProfileContent> {
   final _profileForm = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _city = TextEditingController();
+  double? _lat;
+  double? _lng;
 
   ProfileController get controller => widget.controller;
 
@@ -40,6 +43,8 @@ class _ProfileContentState extends State<_ProfileContent> {
         final user = controller.user.value;
         _name.text = user?.displayName ?? '';
         _city.text = user?.city ?? '';
+        _lat = user?.latitude;
+        _lng = user?.longitude;
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -116,10 +121,17 @@ class _ProfileContentState extends State<_ProfileContent> {
                         validator: (v) => Validators.minLength(v, 2),
                       ),
                       const SizedBox(height: 12),
-                      TextFormField(
+                      AddressPickerField(
+                        label: 'Location',
+                        hint: 'Pick your address',
                         controller: _city,
-                        decoration: const InputDecoration(labelText: 'City'),
-                        validator: Validators.notEmpty,
+                        initialLat: _lat,
+                        initialLng: _lng,
+                        onChanged: (addr, lat, lng) {
+                          _city.text = addr;
+                          _lat = lat;
+                          _lng = lng;
+                        },
                       ),
                       const SizedBox(height: 12),
                       Obx(
@@ -132,6 +144,8 @@ class _ProfileContentState extends State<_ProfileContent> {
                                     controller.saveProfile(
                                       name: _name.text.trim(),
                                       city: _city.text.trim(),
+                                      latitude: _lat,
+                                      longitude: _lng,
                                     );
                                   }
                                 },

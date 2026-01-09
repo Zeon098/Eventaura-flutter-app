@@ -30,6 +30,15 @@ class LocationService {
     );
   }
 
+  Future<(double lat, double lng)?> currentLatLngOrNull() async {
+    try {
+      final pos = await getCurrentPosition();
+      return (pos.latitude, pos.longitude);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Reverse geocode city/locality from coordinates.
   Future<String?> reverseGeocodeCity(double latitude, double longitude) async {
     final placemarks = await geo.placemarkFromCoordinates(latitude, longitude);

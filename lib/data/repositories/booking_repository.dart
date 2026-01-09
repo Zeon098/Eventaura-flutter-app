@@ -151,7 +151,8 @@ class BookingRepository {
           }
 
           return bookings.where((b) => statuses.contains(b.status)).toList();
-        });
+        })
+        .asBroadcastStream();
   }
 
   String _dateKey(DateTime date) {

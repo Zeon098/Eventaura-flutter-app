@@ -26,6 +26,7 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
   late final ServiceModel service;
   late final BookingController bookingController;
   final Set<ServiceCategory> _selectedCategories = {};
+  final Map<String, int> _categoryQuantities = {}; // category id -> quantity
 
   ServiceCategory? _findCategoryById(String? id) {
     if (id == null) return null;
@@ -33,6 +34,21 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
       if (c.id == id) return c;
     }
     return null;
+  }
+
+  double _calculateCategoryPrice(ServiceCategory category) {
+    final quantity = _categoryQuantities[category.id] ?? 1;
+    final pricingType = category.pricingType ?? 'base';
+
+    switch (pricingType) {
+      case 'per_head':
+        return category.price * quantity;
+      case 'per_100_persons':
+        return category.price * (quantity / 100);
+      case 'base':
+      default:
+        return category.price;
+    }
   }
 
   @override
@@ -80,7 +96,7 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
     final userId = userStore.value?.id ?? shell.user.value?.id ?? '';
     final totalPrice = _selectedCategories.fold<double>(
       0,
-      (sum, c) => sum + c.price,
+      (sum, c) => sum + _calculateCategoryPrice(c),
     );
     final showBookButton = userId.isEmpty || userId != service.providerId;
 
@@ -122,6 +138,69 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
                             }
                           }),
                         ),
+                      // Venue Subtypes
+                      if (service.venueSubtypes != null &&
+                          service.venueSubtypes!.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Venue Types',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: service.venueSubtypes!.map((subtype) {
+                            return Chip(
+                              label: Text(subtype),
+                              backgroundColor: AppTheme.primaryColor
+                                  .withOpacity(0.1),
+                              labelStyle: TextStyle(
+                                color: AppTheme.primaryColor,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                      // Quantity Inputs for Selected Categories
+                      if (_selectedCategories.any(
+                        (c) =>
+                            c.pricingType == 'per_head' ||
+                            c.pricingType == 'per_100_persons',
+                      )) ...[
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Quantity',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ..._selectedCategories
+                            .where(
+                              (c) =>
+                                  c.pricingType == 'per_head' ||
+                                  c.pricingType == 'per_100_persons',
+                            )
+                            .map((category) {
+                              return _QuantityInput(
+                                category: category,
+                                quantity: _categoryQuantities[category.id] ?? 1,
+                                onChanged: (value) => setState(() {
+                                  _categoryQuantities[category.id] = value;
+                                }),
+                                calculatedPrice: _calculateCategoryPrice(
+                                  category,
+                                ),
+                              );
+                            }),
+                      ],
                       const SizedBox(height: 16),
                       CategoryRatingRow(service: service),
                       const SizedBox(height: 20),
@@ -166,6 +245,18 @@ class _CategorySelector extends StatelessWidget {
   final Set<ServiceCategory> selected;
   final ValueChanged<ServiceCategory> onToggle;
 
+  String _getPricingTypeLabel(String? pricingType) {
+    switch (pricingType) {
+      case 'per_head':
+        return 'per person';
+      case 'per_100_persons':
+        return 'per 100 persons';
+      case 'base':
+      default:
+        return '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Wrap(
@@ -173,8 +264,11 @@ class _CategorySelector extends StatelessWidget {
       runSpacing: 8,
       children: categories.map((c) {
         final isSelected = selected.any((s) => s.id == c.id);
+        final pricingLabel = _getPricingTypeLabel(c.pricingType);
         return ChoiceChip(
-          label: Text('${c.name} — PKR ${c.price.toStringAsFixed(0)}'),
+          label: Text(
+            '${c.name} — PKR ${c.price.toStringAsFixed(0)}${pricingLabel.isNotEmpty ? ' ($pricingLabel)' : ''}',
+          ),
           selected: isSelected,
           onSelected: (_) => onToggle(c),
           selectedColor: AppTheme.primaryColor.withOpacity(0.15),
@@ -186,6 +280,210 @@ class _CategorySelector extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+class _QuantityInput extends StatefulWidget {
+  const _QuantityInput({
+    required this.category,
+    required this.quantity,
+    required this.onChanged,
+    required this.calculatedPrice,
+  });
+
+  final ServiceCategory category;
+  final int quantity;
+  final ValueChanged<int> onChanged;
+  final double calculatedPrice;
+
+  @override
+  State<_QuantityInput> createState() => _QuantityInputState();
+}
+
+class _QuantityInputState extends State<_QuantityInput> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.quantity.toString());
+    _focusNode = FocusNode();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(_QuantityInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.quantity != oldWidget.quantity && !_focusNode.hasFocus) {
+      _controller.text = widget.quantity.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (!_focusNode.hasFocus) {
+      _validateAndUpdate();
+    }
+  }
+
+  void _validateAndUpdate() {
+    final value = int.tryParse(_controller.text);
+    if (value == null || value < 1) {
+      _controller.text = widget.quantity.toString();
+    } else if (value != widget.quantity) {
+      widget.onChanged(value);
+    }
+  }
+
+  String get _quantityLabel {
+    if (widget.category.pricingType == 'per_100_persons') {
+      return 'Number of People';
+    }
+    return 'Number of People';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.dividerColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.category.name,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Base: PKR ${widget.category.price.toStringAsFixed(0)} ${widget.category.pricingType == 'per_head' ? 'per person' : 'per 100 persons'}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'PKR ${widget.calculatedPrice.toStringAsFixed(0)}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _quantityLabel,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.textSecondaryColor,
+                  ),
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppTheme.dividerColor),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove),
+                      onPressed: widget.quantity > 1
+                          ? () {
+                              widget.onChanged(widget.quantity - 1);
+                              _controller.text = (widget.quantity - 1)
+                                  .toString();
+                            }
+                          : null,
+                      iconSize: 20,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
+                    ),
+                    Container(
+                      width: 60,
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: TextField(
+                        controller: _controller,
+                        focusNode: _focusNode,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                          isDense: true,
+                        ),
+                        onSubmitted: (_) => _validateAndUpdate(),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: () {
+                        widget.onChanged(widget.quantity + 1);
+                        _controller.text = (widget.quantity + 1).toString();
+                      },
+                      iconSize: 20,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

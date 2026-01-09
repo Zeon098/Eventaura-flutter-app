@@ -59,7 +59,12 @@ class ProfileController extends GetxController {
     update();
   }
 
-  Future<void> saveProfile({required String name, required String city}) async {
+  Future<void> saveProfile({
+    required String name,
+    required String city,
+    double? latitude,
+    double? longitude,
+  }) async {
     if (user.value == null) return;
     try {
       isSaving.value = true;
@@ -74,9 +79,13 @@ class ProfileController extends GetxController {
         displayName: name,
         city: city,
         photoUrl: photoUrl,
+        latitude: latitude ?? this.latitude.value,
+        longitude: longitude ?? this.longitude.value,
       );
       await userRepository.upsertUser(updated);
       user.value = updated;
+      this.latitude.value = updated.latitude;
+      this.longitude.value = updated.longitude;
       SnackbarUtils.success('Saved', 'Profile updated');
     } catch (e) {
       SnackbarUtils.error('Profile', e.toString());

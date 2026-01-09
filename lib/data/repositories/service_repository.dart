@@ -30,6 +30,7 @@ class ServiceRepository {
     List<File> gallery = const [],
     double? latitude,
     double? longitude,
+    List<String> venueSubtypes = const [],
   }) async {
     final coverUrl = await _cloudinary.uploadImage(
       cover,
@@ -53,6 +54,7 @@ class ServiceRepository {
       galleryImages: galleryUrls,
       latitude: latitude,
       longitude: longitude,
+      venueSubtypes: venueSubtypes,
     );
     await _firestore
         .collection(AppConstants.servicesCollection)
@@ -88,6 +90,8 @@ class ServiceRepository {
     final updated = service.copyWith(
       coverImage: coverUrl,
       galleryImages: galleryUrls,
+      latitude: service.latitude,
+      longitude: service.longitude,
     );
     await _firestore
         .collection(AppConstants.servicesCollection)
@@ -195,6 +199,7 @@ class ServiceRepository {
       'location': service.location,
       'cover_image': service.coverImage,
       'gallery_images': service.galleryImages.take(5).toList(),
+      'venueSubtypes': service.venueSubtypes,
     };
 
     if (service.latitude != null && service.longitude != null) {
@@ -226,6 +231,7 @@ class ServiceRepository {
       'galleryImages': List<String>.from(hit['gallery_images'] ?? const []),
       'rating': (hit['rating'] as num?)?.toDouble() ?? 0,
       'categoryPrices': hit['categoryPrices'],
+      'venueSubtypes': hit['venueSubtypes'],
     };
 
     return ServiceModel.fromMap(hit['objectID'] ?? '', mapped);

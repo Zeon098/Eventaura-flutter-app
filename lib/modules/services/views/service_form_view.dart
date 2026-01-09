@@ -7,6 +7,7 @@ import '../../home/controllers/shell_controller.dart';
 import '../controllers/service_controller.dart';
 import '../components/form/section_title.dart';
 import '../components/form/styled_text_field.dart';
+import '../../../widgets/address_picker_field.dart';
 import '../components/form/category_dropdown.dart';
 import '../components/form/location_helper.dart';
 import '../components/form/media_section.dart';
@@ -24,9 +25,13 @@ class _ServiceFormViewState extends State<ServiceFormView> {
   final _title = TextEditingController();
   final _description = TextEditingController();
   final _location = TextEditingController();
+  late final ServiceController _controller;
   final Set<String> _selectedCategories = {};
   final Map<String, TextEditingController> _categoryPriceControllers = {};
+  final Map<String, String?> _categoryPricingTypes =
+      {}; // Store pricing type per category
   final Map<String, String> _categoryLabels = {};
+  final Set<String> _selectedVenueSubtypes = {};
   ServiceModel? _editingService;
   bool _isEditMode = false;
 
@@ -41,9 +46,21 @@ class _ServiceFormViewState extends State<ServiceFormView> {
     {'label': '📋 Event Planning', 'value': 'event_planning'},
   ];
 
+  final List<String> _venueSubtypes = [
+    'Outdoor Garden',
+    'Indoor Hall',
+    'Banquet Hall',
+    'Rooftop',
+    'Beach',
+    'Farm House',
+    'Hotel/Resort',
+    'Convention Center',
+  ];
+
   @override
   void initState() {
     super.initState();
+    _controller = Get.find<ServiceController>();
     for (final cat in _categories) {
       _categoryLabels[cat['value'] as String] = cat['label'] as String;
     }
@@ -60,6 +77,8 @@ class _ServiceFormViewState extends State<ServiceFormView> {
       _title.text = _editingService!.title;
       _description.text = _editingService!.description;
       _location.text = _editingService!.location;
+      _controller.latitude.value = _editingService!.latitude;
+      _controller.longitude.value = _editingService!.longitude;
       _selectedCategories
         ..clear()
         ..addAll(
@@ -71,17 +90,21 @@ class _ServiceFormViewState extends State<ServiceFormView> {
         _categoryPriceControllers[category.id] = TextEditingController(
           text: category.price.toString(),
         );
+        _categoryPricingTypes[category.id] = category.pricingType;
       }
+      _selectedVenueSubtypes
+        ..clear()
+        ..addAll(_editingService!.venueSubtypes);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<ServiceController>();
     final shell = Get.find<ShellController>();
 
     if (!_isEditMode && _location.text.isEmpty) {
-      _location.text = shell.user.value?.city ?? controller.locationLabel.value;
+      _location.text =
+          shell.user.value?.city ?? _controller.locationLabel.value;
     }
 
     return Scaffold(
@@ -139,18 +162,69 @@ class _ServiceFormViewState extends State<ServiceFormView> {
                 selectedCategories: _selectedCategories,
                 categories: _categories,
                 controllers: _categoryPriceControllers,
+                pricingTypes: _categoryPricingTypes,
+                onPricingTypeChanged: (catId, type) {
+                  setState(() {
+                    _categoryPricingTypes[catId] = type;
+                  });
+                },
               ),
+              const SizedBox(height: 16),
+              // Venue subtypes (only show if venue is selected)
+              if (_selectedCategories.contains('venue')) ...[
+                const SizedBox(height: 8),
+                const Text(
+                  'Venue Type',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _venueSubtypes.map((subtype) {
+                    final isSelected = _selectedVenueSubtypes.contains(subtype);
+                    return FilterChip(
+                      label: Text(subtype),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _selectedVenueSubtypes.add(subtype);
+                          } else {
+                            _selectedVenueSubtypes.remove(subtype);
+                          }
+                        });
+                      },
+                      selectedColor: AppTheme.primaryColor.withOpacity(0.2),
+                      checkmarkColor: AppTheme.primaryColor,
+                      labelStyle: TextStyle(
+                        color: isSelected
+                            ? AppTheme.primaryColor
+                            : AppTheme.textSecondaryColor,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
               const SizedBox(height: 24),
               const SectionTitle(title: '📍 Location'),
               const SizedBox(height: 16),
-              StyledTextField(
-                controller: _location,
+              AddressPickerField(
                 label: 'Service Location',
                 hint: 'Where you provide this service',
-                validator: Validators.notEmpty,
+                controller: _location,
+                initialLat: _controller.latitude.value,
+                initialLng: _controller.longitude.value,
+                onChanged: (addr, lat, lng) {
+                  _controller.latitude.value = lat;
+                  _controller.longitude.value = lng;
+                },
               ),
-              const SizedBox(height: 12),
-              LocationHelper(locationController: _location),
+              // const SizedBox(height: 12),
+              // LocationHelper(locationController: _location),
               const SizedBox(height: 24),
               const SectionTitle(title: '📄 Description'),
               const SizedBox(height: 16),
@@ -179,7 +253,9 @@ class _ServiceFormViewState extends State<ServiceFormView> {
                 locationController: _location,
                 selectedCategories: _selectedCategories.toList(),
                 categoryPriceControllers: _categoryPriceControllers,
+                categoryPricingTypes: _categoryPricingTypes,
                 categoryLabels: _categoryLabels,
+                venueSubtypes: _selectedVenueSubtypes.toList(),
               ),
               const SizedBox(height: 20),
             ],
@@ -195,11 +271,15 @@ class _CategoryPriceInputs extends StatelessWidget {
     required this.selectedCategories,
     required this.categories,
     required this.controllers,
+    required this.pricingTypes,
+    required this.onPricingTypeChanged,
   });
 
   final Set<String> selectedCategories;
   final List<Map<String, dynamic>> categories;
   final Map<String, TextEditingController> controllers;
+  final Map<String, String?> pricingTypes;
+  final Function(String catId, String? type) onPricingTypeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -217,14 +297,55 @@ class _CategoryPriceInputs extends StatelessWidget {
         ...selected.map((c) {
           final id = c['value'] as String;
           controllers.putIfAbsent(id, () => TextEditingController());
+          final isVenue = id == 'venue';
+          final currentType =
+              pricingTypes[id] ?? (isVenue ? 'per_100_persons' : 'base');
+
           return Padding(
             padding: const EdgeInsets.only(top: 12),
-            child: StyledTextField(
-              controller: controllers[id] ?? TextEditingController(),
-              label: '${c['label']} price (PKR)',
-              hint: 'e.g., 5000',
-              keyboardType: TextInputType.number,
-              validator: Validators.notEmpty,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                StyledTextField(
+                  controller: controllers[id] ?? TextEditingController(),
+                  label: '${c['label']} price (PKR)',
+                  hint: 'e.g., 5000',
+                  keyboardType: TextInputType.number,
+                  validator: Validators.notEmpty,
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: currentType,
+                  decoration: InputDecoration(
+                    labelText: 'Pricing Type',
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  items: [
+                    if (isVenue)
+                      const DropdownMenuItem(
+                        value: 'per_100_persons',
+                        child: Text('Per 100 Persons'),
+                      ),
+                    if (!isVenue) ...[
+                      const DropdownMenuItem(
+                        value: 'base',
+                        child: Text('Base Price'),
+                      ),
+                      const DropdownMenuItem(
+                        value: 'per_head',
+                        child: Text('Per Head/Person'),
+                      ),
+                    ],
+                  ],
+                  onChanged: (value) => onPricingTypeChanged(id, value),
+                ),
+              ],
             ),
           );
         }),

@@ -85,6 +85,7 @@ class ServiceController extends GetxController {
     required String location,
     double? latitude,
     double? longitude,
+    List<String> venueSubtypes = const [],
   }) async {
     if (cover == null) {
       SnackbarUtils.error('Missing cover', 'Upload a cover image');
@@ -107,6 +108,7 @@ class ServiceController extends GetxController {
         latitude: latitude ?? this.latitude.value ?? userStore.value?.latitude,
         longitude:
             longitude ?? this.longitude.value ?? userStore.value?.longitude,
+        venueSubtypes: venueSubtypes,
       );
       SnackbarUtils.success('Created', 'Service published');
     } catch (e) {

@@ -4,25 +4,47 @@ class ServiceCategory extends Equatable {
   final String id;
   final String name;
   final double price;
+  final String? pricingType; // 'base', 'per_head', 'per_100_persons'
 
   const ServiceCategory({
     required this.id,
     required this.name,
     required this.price,
+    this.pricingType,
   });
 
-  Map<String, dynamic> toMap() => {'id': id, 'name': name, 'price': price};
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'name': name,
+    'price': price,
+    if (pricingType != null) 'pricingType': pricingType,
+  };
 
   factory ServiceCategory.fromMap(Map<String, dynamic> map) {
     return ServiceCategory(
       id: map['id']?.toString() ?? '',
       name: map['name']?.toString() ?? '',
       price: (map['price'] as num?)?.toDouble() ?? 0,
+      pricingType: map['pricingType']?.toString(),
+    );
+  }
+
+  ServiceCategory copyWith({
+    String? id,
+    String? name,
+    double? price,
+    String? pricingType,
+  }) {
+    return ServiceCategory(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      price: price ?? this.price,
+      pricingType: pricingType ?? this.pricingType,
     );
   }
 
   @override
-  List<Object?> get props => [id, name, price];
+  List<Object?> get props => [id, name, price, pricingType];
 }
 
 class ServiceModel extends Equatable {
@@ -38,6 +60,8 @@ class ServiceModel extends Equatable {
   final List<String> galleryImages;
   final double rating;
   final double? legacyPrice; // retained for backwards compatibility
+  final List<String>
+  venueSubtypes; // e.g., ['Outdoor', 'Indoor', 'Banquet Hall']
 
   const ServiceModel({
     required this.id,
@@ -52,6 +76,7 @@ class ServiceModel extends Equatable {
     this.longitude,
     this.rating = 0,
     this.legacyPrice,
+    this.venueSubtypes = const [],
   });
 
   ServiceCategory? get primaryCategory =>
@@ -72,6 +97,7 @@ class ServiceModel extends Equatable {
     String? coverImage,
     List<String>? galleryImages,
     double? rating,
+    List<String>? venueSubtypes,
   }) {
     return ServiceModel(
       id: id,
@@ -86,6 +112,7 @@ class ServiceModel extends Equatable {
       galleryImages: galleryImages ?? this.galleryImages,
       rating: rating ?? this.rating,
       legacyPrice: legacyPrice,
+      venueSubtypes: venueSubtypes ?? this.venueSubtypes,
     );
   }
 
@@ -103,6 +130,7 @@ class ServiceModel extends Equatable {
       'coverImage': coverImage,
       'galleryImages': galleryImages,
       'rating': rating,
+      'venueSubtypes': venueSubtypes,
     };
   }
 
@@ -169,6 +197,7 @@ class ServiceModel extends Equatable {
       galleryImages: List<String>.from(map['galleryImages'] ?? []),
       rating: (map['rating'] as num?)?.toDouble() ?? 0,
       legacyPrice: (map['price'] as num?)?.toDouble(),
+      venueSubtypes: List<String>.from(map['venueSubtypes'] ?? []),
     );
   }
 
@@ -186,5 +215,6 @@ class ServiceModel extends Equatable {
     galleryImages,
     rating,
     legacyPrice,
+    venueSubtypes,
   ];
 }

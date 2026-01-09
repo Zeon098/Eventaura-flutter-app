@@ -15,7 +15,9 @@ class PublishButton extends StatelessWidget {
   final TextEditingController locationController;
   final List<String> selectedCategories;
   final Map<String, TextEditingController> categoryPriceControllers;
+  final Map<String, String?> categoryPricingTypes;
   final Map<String, String> categoryLabels;
+  final List<String> venueSubtypes;
 
   const PublishButton({
     super.key,
@@ -27,7 +29,9 @@ class PublishButton extends StatelessWidget {
     required this.locationController,
     required this.selectedCategories,
     required this.categoryPriceControllers,
+    required this.categoryPricingTypes,
     required this.categoryLabels,
+    this.venueSubtypes = const [],
   });
 
   @override
@@ -80,11 +84,13 @@ class PublishButton extends StatelessWidget {
                           );
                           return;
                         }
+                        final pricingType = categoryPricingTypes[id];
                         categories.add(
                           ServiceCategory(
                             id: id,
                             name: categoryLabels[id] ?? id,
                             price: price,
+                            pricingType: pricingType,
                           ),
                         );
                       }
@@ -98,6 +104,7 @@ class PublishButton extends StatelessWidget {
                           location: locationController.text.trim(),
                           latitude: controller.latitude.value,
                           longitude: controller.longitude.value,
+                          venueSubtypes: venueSubtypes,
                         );
                         controller.updateService(updatedService);
                       } else {
@@ -110,6 +117,7 @@ class PublishButton extends StatelessWidget {
                           location: locationController.text.trim(),
                           latitude: controller.latitude.value,
                           longitude: controller.longitude.value,
+                          venueSubtypes: venueSubtypes,
                         );
                       }
                     }

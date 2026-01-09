@@ -60,10 +60,7 @@ class _MapViewState extends State<MapView> {
         zoom: 12,
       );
     }
-    return CameraOptions(
-      center: Point(coordinates: Position(0, 0)),
-      zoom: 2,
-    );
+    return CameraOptions(center: Point(coordinates: Position(0, 0)), zoom: 2);
   }
 
   Future<void> _onMapCreated(MapboxMap mapboxMap) async {
@@ -77,7 +74,8 @@ class _MapViewState extends State<MapView> {
     }
 
     await _mapboxMap!.loadStyleURI(AppConstants.mapboxStyleLight);
-    _pointManager = await _mapboxMap!.annotations.createPointAnnotationManager();
+    _pointManager = await _mapboxMap!.annotations
+        .createPointAnnotationManager();
     await _addServiceAnnotations();
   }
 
@@ -88,9 +86,7 @@ class _MapViewState extends State<MapView> {
     // Service markers
     final serviceOptions = _services.map((s) {
       return PointAnnotationOptions(
-        geometry: Point(
-          coordinates: Position(s.longitude!, s.latitude!),
-        ),
+        geometry: Point(coordinates: Position(s.longitude!, s.latitude!)),
         iconImage: 'marker-15',
         iconSize: 1.5,
         textField: s.title,
@@ -104,9 +100,7 @@ class _MapViewState extends State<MapView> {
     if (_centerLat != null && _centerLng != null) {
       await _pointManager!.create(
         PointAnnotationOptions(
-          geometry: Point(
-            coordinates: Position(_centerLng!, _centerLat!),
-          ),
+          geometry: Point(coordinates: Position(_centerLng!, _centerLat!)),
           iconImage: 'harbor-15',
           iconColor: 0xFF1E88E5,
           iconSize: 1.6,
@@ -159,10 +153,7 @@ class _MapViewState extends State<MapView> {
                 ),
                 Text(
                   service.primaryCategoryName,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey,
-                  ),
+                  style: const TextStyle(fontSize: 13, color: Colors.grey),
                 ),
               ],
             ),

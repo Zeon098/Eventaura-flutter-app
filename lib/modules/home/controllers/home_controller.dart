@@ -81,7 +81,14 @@ class HomeController extends GetxController {
         limit: 20,
         radiusKm: 50,
       );
-      nearby.assignAll(items);
+      // Filter to show only venues
+      nearby.assignAll(
+        items
+            .where(
+              (service) => service.categories.any((cat) => cat.id == 'venue'),
+            )
+            .toList(),
+      );
     } catch (e) {
       error.value = e.toString();
       nearby.clear();
