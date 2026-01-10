@@ -27,6 +27,7 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
   late final BookingController bookingController;
   final Set<ServiceCategory> _selectedCategories = {};
   final Map<String, int> _categoryQuantities = {}; // category id -> quantity
+  String? _selectedVenueSubtype; // Track selected venue subtype
 
   ServiceCategory? _findCategoryById(String? id) {
     if (id == null) return null;
@@ -138,9 +139,12 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
                             }
                           }),
                         ),
-                      // Venue Subtypes
+                      // Venue Subtypes - only show when venue category is selected
                       if (service.venueSubtypes != null &&
-                          service.venueSubtypes!.isNotEmpty) ...[
+                          service.venueSubtypes!.isNotEmpty &&
+                          _selectedCategories.any(
+                            (cat) => cat.id == 'venue',
+                          )) ...[
                         const SizedBox(height: 20),
                         const Text(
                           'Venue Types',
@@ -151,17 +155,78 @@ class _ServiceDetailViewState extends State<ServiceDetailView> {
                         ),
                         const SizedBox(height: 12),
                         Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
+                          spacing: 10,
+                          runSpacing: 10,
                           children: service.venueSubtypes!.map((subtype) {
-                            return Chip(
-                              label: Text(subtype),
-                              backgroundColor: AppTheme.primaryColor
-                                  .withOpacity(0.1),
-                              labelStyle: TextStyle(
-                                color: AppTheme.primaryColor,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
+                            final isSelected = _selectedVenueSubtype == subtype;
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _selectedVenueSubtype = isSelected
+                                      ? null
+                                      : subtype;
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: isSelected
+                                      ? LinearGradient(
+                                          colors: [
+                                            AppTheme.primaryColor,
+                                            AppTheme.secondaryColor,
+                                          ],
+                                        )
+                                      : null,
+                                  color: isSelected ? null : Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? AppTheme.primaryColor
+                                        : AppTheme.dividerColor,
+                                    width: isSelected ? 2 : 1.5,
+                                  ),
+                                  boxShadow: isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: AppTheme.primaryColor
+                                                .withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ]
+                                      : [],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (isSelected)
+                                      const Padding(
+                                        padding: EdgeInsets.only(right: 8),
+                                        child: Icon(
+                                          Icons.check_circle,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    Text(
+                                      subtype,
+                                      style: TextStyle(
+                                        color: isSelected
+                                            ? Colors.white
+                                            : AppTheme.textPrimaryColor,
+                                        fontSize: 14,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
                           }).toList(),

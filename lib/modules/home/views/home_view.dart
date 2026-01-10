@@ -245,13 +245,11 @@ class HomeView extends GetView {
                       ),
                       // Venue Subtype Chips
                       Obx(() {
-                        final items = homeController.nearby;
-                        if (items.isEmpty ||
-                            homeController.nearbyLoading.value) {
+                        if (homeController.nearbyLoading.value) {
                           return const SizedBox.shrink();
                         }
-                        // Get unique venue subtypes
-                        final subtypes = items
+                        // Get unique venue subtypes from all nearby venues
+                        final subtypes = homeController.allNearby
                             .expand((service) => service.venueSubtypes)
                             .toSet()
                             .toList();
@@ -259,24 +257,84 @@ class HomeView extends GetView {
                           return const SizedBox.shrink();
                         }
                         return Container(
-                          height: 50,
-                          margin: const EdgeInsets.only(bottom: 16),
+                          margin: const EdgeInsets.only(bottom: 16, top: 12),
+                          height: 42,
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
                             padding: const EdgeInsets.symmetric(horizontal: 20),
-                            itemCount: subtypes.length,
+                            itemCount: subtypes.length + 1, // +1 for "All" chip
                             itemBuilder: (context, index) {
-                              final subtype = subtypes[index];
+                              if (index == 0) {
+                                // "All" chip
+                                final isSelected =
+                                    homeController.selectedVenueSubtype.value ==
+                                    null;
+                                return Container(
+                                  margin: const EdgeInsets.only(right: 8),
+                                  child: FilterChip(
+                                    label: const Text('All'),
+                                    selected: isSelected,
+                                    onSelected: (_) =>
+                                        homeController.selectVenueSubtype(null),
+                                    backgroundColor: Colors.white,
+                                    selectedColor: AppTheme.primaryColor,
+                                    labelStyle: TextStyle(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : AppTheme.textSecondaryColor,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    checkmarkColor: Colors.white,
+                                    elevation: isSelected ? 2 : 0,
+                                    shadowColor: AppTheme.primaryColor
+                                        .withOpacity(0.3),
+                                    side: BorderSide(
+                                      color: isSelected
+                                          ? AppTheme.primaryColor
+                                          : AppTheme.dividerColor,
+                                      width: 1.5,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                );
+                              }
+                              final subtype = subtypes[index - 1];
+                              final isSelected =
+                                  homeController.selectedVenueSubtype.value ==
+                                  subtype;
                               return Container(
                                 margin: const EdgeInsets.only(right: 8),
-                                child: Chip(
+                                child: FilterChip(
                                   label: Text(subtype),
-                                  backgroundColor: AppTheme.primaryColor
-                                      .withOpacity(0.1),
+                                  selected: isSelected,
+                                  onSelected: (_) => homeController
+                                      .selectVenueSubtype(subtype),
+                                  backgroundColor: Colors.white,
+                                  selectedColor: AppTheme.primaryColor,
                                   labelStyle: TextStyle(
-                                    color: AppTheme.primaryColor,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : AppTheme.textSecondaryColor,
                                     fontSize: 13,
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  checkmarkColor: Colors.white,
+                                  elevation: isSelected ? 2 : 0,
+                                  shadowColor: AppTheme.primaryColor
+                                      .withOpacity(0.3),
+                                  side: BorderSide(
+                                    color: isSelected
+                                        ? AppTheme.primaryColor
+                                        : AppTheme.dividerColor,
+                                    width: 1.5,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
                                   ),
                                 ),
                               );

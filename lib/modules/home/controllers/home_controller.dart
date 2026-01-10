@@ -18,12 +18,14 @@ class HomeController extends GetxController {
 
   final trending = <ServiceModel>[].obs;
   final nearby = <ServiceModel>[].obs;
+  final allNearby = <ServiceModel>[].obs; // Store all nearby venues (public)
   final myServices = <ServiceModel>[].obs;
   final trendingLoading = false.obs;
   final nearbyLoading = false.obs;
   final myServicesLoading = false.obs;
   final error = RxnString();
   final hasLocation = false.obs;
+  final selectedVenueSubtype = RxnString(); // null means show all
   double? userLat;
   double? userLng;
   Stream<List<ServiceModel>>? _myServicesStream;
@@ -82,13 +84,13 @@ class HomeController extends GetxController {
         radiusKm: 50,
       );
       // Filter to show only venues
-      nearby.assignAll(
-        items
-            .where(
-              (service) => service.categories.any((cat) => cat.id == 'venue'),
-            )
-            .toList(),
-      );
+      final venueItems = items
+          .where(
+            (service) => service.categories.any((cat) => cat.id == 'venue'),
+          )
+          .toList();
+      allNearby.assignAll(venueItems);
+      _applyVenueSubtypeFilter();
     } catch (e) {
       error.value = e.toString();
       nearby.clear();
@@ -115,6 +117,26 @@ class HomeController extends GetxController {
       myServices.clear();
     } finally {
       myServicesLoading.value = false;
+    }
+  }
+
+  void selectVenueSubtype(String? subtype) {
+    selectedVenueSubtype.value = subtype;
+    _applyVenueSubtypeFilter();
+  }
+
+  void _applyVenueSubtypeFilter() {
+    if (selectedVenueSubtype.value == null) {
+      nearby.assignAll(allNearby);
+    } else {
+      nearby.assignAll(
+        allNearby
+            .where(
+              (service) =>
+                  service.venueSubtypes.contains(selectedVenueSubtype.value),
+            )
+            .toList(),
+      );
     }
   }
 }
